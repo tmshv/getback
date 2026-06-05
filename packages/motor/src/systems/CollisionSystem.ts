@@ -10,7 +10,10 @@ import type { Obstacle } from "../entities/Obstacle.js";
 // (maxSpeed * dtClampMax) is far smaller than any obstacle radius, so a unit
 // cannot skip across an obstacle in one frame, and circle-circle push-out has no
 // "which side" ambiguity. Fence segments (which DO need swept CCD) are a later plan.
-export function collisionSystem(units: Mobile[], obstacles: Obstacle[]): void {
+//
+// Single pass per frame: with sparse point obstacles, being pushed out of A into a
+// previously-cleared B is rare and self-corrects on the next tick.
+export function collisionSystem(units: Mobile[], obstacles: readonly Obstacle[]): void {
   for (const u of units) {
     for (const o of obstacles) {
       const dx = u.pos.x - o.pos.x;

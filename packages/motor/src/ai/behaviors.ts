@@ -1,6 +1,5 @@
 import type { Mobile } from "../types.js";
 import type { BehaviorNode } from "../steering/types.js";
-import type { Obstacle } from "../entities/Obstacle.js";
 import { seek } from "../steering/primitives.js";
 import { gradientAt } from "../grass/GrassField.js";
 
