@@ -40,3 +40,13 @@ export function pointInPolygon(p: Vec2, poly: Vec2[]): boolean {
   const ring = poly.map((v) => [v.x, v.y] as [number, number]);
   return rpip(ring, [p.x, p.y]) < 0;
 }
+
+// Do segments p1p2 and p3p4 intersect? Standard parametric test. Parallel/
+// collinear segments return false (we don't need collinear-overlap handling).
+export function segmentsIntersect(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2): boolean {
+  const d = (p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x);
+  if (d === 0) return false;
+  const t = ((p3.x - p1.x) * (p4.y - p3.y) - (p3.y - p1.y) * (p4.x - p3.x)) / d;
+  const u = ((p3.x - p1.x) * (p2.y - p1.y) - (p3.y - p1.y) * (p2.x - p1.x)) / d;
+  return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
