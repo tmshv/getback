@@ -178,9 +178,10 @@ export function regrow(field: GrassField, dt: number): void {
 }
 
 // Central-difference gradient of density at a world position. Points toward
-// increasing density (greener pasture). Writes into `out`.
+// increasing density (greener pasture). Writes into `out`. Samples two cells out
+// (2*cellSize) so a sheep senses a lush neighbour even across one intervening cell.
 export function gradientAt(field: GrassField, x: number, y: number, out: Vec2): void {
-  const cs = field.cellSize;
+  const cs = field.cellSize * 2;
   out.x = densityAt(field, x + cs, y) - densityAt(field, x - cs, y);
   out.y = densityAt(field, x, y + cs) - densityAt(field, x, y - cs);
 }
@@ -660,7 +661,7 @@ export { driveSystem } from "./systems/DriveSystem.js";
 - [ ] **Step 8: Verify everything still type-checks and the existing suite passes**
 
 Run: `npm test`
-Expected: PASS — all existing tests (including the Plan 2 flocking integration test, which uses uniform default grass so graze stays inert).
+Expected: PASS — all existing tests (including the Plan 2 flocking integration test; its default grass starts uniform, and although depletion makes `graze` active within a second or two, the social forces dominate the blend so the test's `spread` assertion still holds).
 
 Run: `npm run typecheck`
 Expected: exits 0.
@@ -687,29 +688,32 @@ Append to `packages/motor/src/world/Game.test.ts` (add imports for `createGrassF
 import { createGrassField, setDensityAt, densityAt } from "../grass/GrassField.js";
 
 describe("autonomous grazing integration", () => {
-  it("a lone sheep drifts toward greener grass and grazes it down", () => {
-    // A field that is bare in the west and lush in the east third.
-    const grass = createGrassField({ cols: 30, rows: 18, cellSize: 16, regrowRate: 0, depleteRate: 0.4, initial: 0.1 });
-    for (let cx = 20; cx < 30; cx++) {
-      for (let cy = 0; cy < 18; cy++) {
-        setDensityAt(grass, cx * 16 + 8, cy * 16 + 8, 1); // lush eastern band, world x >= ~320
-      }
+  it("a lone sheep climbs a smooth grass gradient toward greener pasture, grazing as it goes", () => {
+    // A SMOOTH west->east gradient: bare in the west, lush in the east. Every
+    // cell has a non-zero eastward gradient, so even a sheep starting in the
+    // sparse west senses which way is greener (a sharp far-off band would read
+    // zero gradient locally and give no signal).
+    const cols = 30, rows = 18, cs = 16;
+    const grass = createGrassField({ cols, rows, cellSize: cs, regrowRate: 0, depleteRate: 0.4, initial: 0 });
+    for (let cx = 0; cx < cols; cx++) {
+      const d = 0.1 + 0.9 * (cx / (cols - 1)); // 0.1 (west) -> 1.0 (east)
+      for (let cy = 0; cy < rows; cy++) setDensityAt(grass, cx * cs + 8, cy * cs + 8, d);
     }
     const sheep = [createSheep({ x: 120, y: 140 }, defaultSheepTraits())];
     const game = new Game(createWorld(sheep, grass));
 
     const startX = sheep[0]!.pos.x;
-    const lushBefore = densityAt(grass, 360, 140); // a cell inside the lush band
+    let totalBefore = 0;
+    for (let i = 0; i < grass.density.length; i++) totalBefore += grass.density[i]!;
 
     for (let i = 0; i < 1200; i++) game.update(1 / 60); // 20 s
 
-    // It moved east, toward the greener pasture.
+    // It climbed the gradient eastward toward greener pasture.
     expect(sheep[0]!.pos.x).toBeGreaterThan(startX + 50);
-    // ...and grazed the lush band down somewhere it passed through.
-    // (Total grass in the lush band dropped because the sheep ate while crossing.)
-    let lushSum = 0;
-    for (let cx = 20; cx < 30; cx++) lushSum += densityAt(grass, cx * 16 + 8, 140);
-    expect(lushSum).toBeLessThan(10 * lushBefore); // 10 cells, each started at lushBefore(=1)
+    // ...and grazed grass down along the way (regrowRate 0, so any drop is the sheep eating).
+    let totalAfter = 0;
+    for (let i = 0; i < grass.density.length; i++) totalAfter += grass.density[i]!;
+    expect(totalAfter).toBeLessThan(totalBefore);
     // numerically sane
     expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
     expect(Number.isFinite(sheep[0]!.pos.y)).toBe(true);
@@ -756,7 +760,7 @@ git commit -m "Add autonomous grazing integration test"
 
 **Type consistency:** `SteerContext` gains `grass` (Task 3) and every constructor of a ctx is updated in the same plan (behaviors.test, SteeringSystem, NeighborhoodSystem.test). `steeringSystem` signature change `(sheep, dt)` → `(sheep, grass, dt)` is propagated to its only two call sites (`Game.ts`, `NeighborhoodSystem.test.ts`). `buildFlockTree` → `buildSheepTree` is propagated to its only consumer (`Sheep.ts`) and the barrel. `Sheep` gains `drives: { hunger }`; `createSheep` initializes it; the Plan-2 `Sheep.test` checks individual fields (not a whole-object `toEqual`), so it stays green. `World` gains `grass` with a default, so `createWorld(sheep)` callers (the Plan-2 integration test) keep working.
 
-**Backward-compat risk:** the Plan-2 flocking integration test calls `createWorld(sheep)` and `game.update(1/60)`; with default uniform grass the new `grassSystem`/`driveSystem`/`graze` are inert (gradient 0), so that test's assertions are unchanged. Verified by reasoning; Task 5 step 8 runs the whole suite to confirm.
+**Backward-compat note:** the Plan-2 flocking integration test calls `createWorld(sheep)` and `game.update(1/60)`. Grass starts uniform, so `graze` is zero *initially* — but `grassSystem` depletes the cells under the wandering sheep before steering, so within ~1–2 s the field is no longer uniform and `graze` begins to fire. The flocking test still passes not because graze is silent, but because the social forces (separation w=1.6, cohesion w≈0.9) **dominate** the blend and the assertion has slack (`spread1 < spread0 * 0.7`). Do not rely on "graze is inert" — rely on "graze is dominated." Task 5's verification runs the whole suite to confirm the assertion still holds.
 
 ---
 

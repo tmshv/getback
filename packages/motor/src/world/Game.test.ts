@@ -3,6 +3,7 @@ import { Game } from "./Game.js";
 import { createWorld } from "./World.js";
 import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 import type { Sheep } from "../entities/Sheep.js";
+import { createGrassField, setDensityAt } from "../grass/GrassField.js";
 
 function centroid(sheep: Sheep[]) {
   const c = { x: 0, y: 0 };
@@ -54,5 +55,38 @@ describe("flocking integration", () => {
       expect(Number.isFinite(s.pos.x)).toBe(true);
       expect(Number.isFinite(s.pos.y)).toBe(true);
     }
+  });
+});
+
+describe("autonomous grazing integration", () => {
+  it("a lone sheep climbs a smooth grass gradient toward greener pasture, grazing as it goes", () => {
+    // A SMOOTH west->east gradient: bare in the west, lush in the east. Every
+    // cell has a non-zero eastward gradient, so even a sheep starting in the
+    // sparse west senses which way is greener (a sharp far-off band would read
+    // zero gradient locally and give no signal).
+    const cols = 30, rows = 18, cs = 16;
+    const grass = createGrassField({ cols, rows, cellSize: cs, regrowRate: 0, depleteRate: 0.4, initial: 0 });
+    for (let cx = 0; cx < cols; cx++) {
+      const d = 0.1 + 0.9 * (cx / (cols - 1)); // 0.1 (west) -> 1.0 (east)
+      for (let cy = 0; cy < rows; cy++) setDensityAt(grass, cx * cs + 8, cy * cs + 8, d);
+    }
+    const sheep = [createSheep({ x: 120, y: 140 }, defaultSheepTraits())];
+    const game = new Game(createWorld(sheep, grass));
+
+    const startX = sheep[0]!.pos.x;
+    let totalBefore = 0;
+    for (let i = 0; i < grass.density.length; i++) totalBefore += grass.density[i]!;
+
+    for (let i = 0; i < 1200; i++) game.update(1 / 60); // 20 s
+
+    // It climbed the gradient eastward toward greener pasture.
+    expect(sheep[0]!.pos.x).toBeGreaterThan(startX + 50);
+    // ...and grazed grass down along the way (regrowRate 0, so any drop is the sheep eating).
+    let totalAfter = 0;
+    for (let i = 0; i < grass.density.length; i++) totalAfter += grass.density[i]!;
+    expect(totalAfter).toBeLessThan(totalBefore);
+    // numerically sane
+    expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
+    expect(Number.isFinite(sheep[0]!.pos.y)).toBe(true);
   });
 });
