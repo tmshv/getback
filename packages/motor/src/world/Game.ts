@@ -7,6 +7,7 @@ import { steeringSystem } from "../systems/SteeringSystem.js";
 import { movementSystem } from "../systems/MovementSystem.js";
 import { collisionSystem } from "../systems/CollisionSystem.js";
 import { penSystem } from "../systems/PenSystem.js";
+import { fenceCollisionSystem } from "../systems/FenceCollisionSystem.js";
 
 // Drives one simulation step. The render/app layer calls this each frame.
 export class Game {
@@ -21,6 +22,9 @@ export class Game {
     steeringSystem(sheep, { grass, obstacles }, step);
     movementSystem(sheep, step);
     collisionSystem(sheep, obstacles);
-    if (pen) penSystem(pen, sheep);
+    if (pen) {
+      fenceCollisionSystem(pen, sheep);
+      penSystem(pen, sheep);
+    }
   }
 }

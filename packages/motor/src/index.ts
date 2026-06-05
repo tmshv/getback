@@ -28,3 +28,4 @@ export { generatePen } from "./world/penGen.js";
 export type { Pen, Segment } from "./world/Pen.js";
 export { buildPen, penContains } from "./world/Pen.js";
 export { penSystem } from "./systems/PenSystem.js";
+export { fenceCollisionSystem } from "./systems/FenceCollisionSystem.js";
