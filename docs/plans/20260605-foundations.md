@@ -192,7 +192,9 @@ describe("vec2", () => {
     expect(truncate({ x: 6, y: 8 }, 5)).toEqual({ x: 3, y: 4 });
   });
   it("computes a left perpendicular", () => {
-    expect(perp({ x: 1, y: 0 })).toEqual({ x: 0, y: 1 });
+    const p = perp({ x: 1, y: 0 });
+    expect(p.x).toBeCloseTo(0); // tolerant of -0
+    expect(p.y).toBe(1);
   });
 });
 ```
@@ -307,7 +309,7 @@ Expected: FAIL — cannot resolve `./geometry.js`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `packages/math/src/geometry.ts`:
+`robust-point-in-polygon` ships no type declarations, so first add the community types (root devDependency): `npm i -D @types/robust-point-in-polygon@^1.0.4`. Then create `packages/math/src/geometry.ts`:
 
 ```ts
 import rpip from "robust-point-in-polygon";
@@ -440,7 +442,10 @@ export function makeRng(seed: number): Rng {
   const float = () => u32() / 0x100000000;
   const int = (min: number, max: number) => prand.unsafeUniformIntDistribution(min, max, gen);
   const range = (min: number, max: number) => min + float() * (max - min);
-  const pick = <T>(items: readonly T[]): T => items[int(0, items.length - 1)]!;
+  const pick = <T>(items: readonly T[]): T => {
+    if (items.length === 0) throw new RangeError("pick from empty array");
+    return items[int(0, items.length - 1)]!;
+  };
   return { float, int, range, pick };
 }
 ```
@@ -783,7 +788,7 @@ Expected: FAIL — cannot resolve `./staticIndex.js`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `packages/spatial/src/staticIndex.ts`:
+`rbush` v4 ships no type declarations, so add the community types (root devDependency): `npm i -D @types/rbush@^4.0.0`. Then create `packages/spatial/src/staticIndex.ts`:
 
 ```ts
 import RBush from "rbush";
