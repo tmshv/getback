@@ -231,8 +231,9 @@ export const truncate = (a: Vec2, max: number): Vec2 => {
   return l > max && l > 0 ? scale(a, max / l) : { x: a.x, y: a.y };
 };
 
-// left-hand perpendicular (90° CCW)
-export const perp = (a: Vec2): Vec2 => ({ x: -a.y, y: a.x });
+// left-hand perpendicular (90° CCW). Guard `-a.y` against negative zero so that
+// perp({x:1,y:0}) === {x:0,y:1} under deep equality (Vitest's toEqual treats -0 ≠ 0).
+export const perp = (a: Vec2): Vec2 => ({ x: a.y === 0 ? 0 : -a.y, y: a.x });
 ```
 
 - [ ] **Step 5: Run the test to verify it passes**
@@ -307,7 +308,7 @@ Expected: FAIL — cannot resolve `./geometry.js`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `packages/math/src/geometry.ts`:
+`robust-point-in-polygon` ships no type declarations, so first add the community types (root devDependency): `npm i -D @types/robust-point-in-polygon@^1.0.4`. Then create `packages/math/src/geometry.ts`:
 
 ```ts
 import rpip from "robust-point-in-polygon";
@@ -783,7 +784,7 @@ Expected: FAIL — cannot resolve `./staticIndex.js`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `packages/spatial/src/staticIndex.ts`:
+`rbush` v4 ships no type declarations, so add the community types (root devDependency): `npm i -D @types/rbush@^4.0.0`. Then create `packages/spatial/src/staticIndex.ts`:
 
 ```ts
 import RBush from "rbush";
