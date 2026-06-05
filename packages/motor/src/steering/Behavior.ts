@@ -10,7 +10,9 @@ export interface WeightedChild {
 // The `combine()` of the design: walk children in priority order, add
 // `childForce * weight` while tracking the remaining maxForce budget, and stop
 // once it is spent — so high-priority children are never starved by low ones.
-// Writes the combined force into `out`. Always "fired".
+// Budget is consumed by each child's per-vector magnitude (not by the resultant
+// magnitude), so opposing children can spend budget while `out` stays small;
+// MovementSystem re-truncates `out` to maxForce anyway. Always "fired".
 export function blend(children: WeightedChild[]): BehaviorNode {
   const scratch: Vec2 = { x: 0, y: 0 };
   return {

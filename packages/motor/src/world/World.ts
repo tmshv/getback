@@ -11,7 +11,7 @@ export interface Rect {
 
 export interface World {
   sheep: Sheep[];
-  bounds: Rect;
+  bounds: Rect; // reserved: boundary containment / bounds-avoidance steering arrives in a later plan
   grid: UniformGrid<Sheep>;
 }
 
