@@ -6,6 +6,7 @@ import type { Obstacle } from "../entities/Obstacle.js";
 import type { Pen } from "./Pen.js";
 import type { Dog } from "../entities/Dog.js";
 import { config } from "../config.js";
+import type { StressSource } from "../scare/StressSource.js";
 
 export interface Rect {
   x: number;
@@ -21,6 +22,7 @@ export interface World {
   obstacles: Obstacle[];
   pen: Pen | null;
   dog: Dog | null;
+  stress: StressSource[];
   grid: UniformGrid<Sheep>;
 }
 
@@ -50,6 +52,7 @@ export function createWorld(
     obstacles,
     pen,
     dog,
+    stress: [],
     grid: new UniformGrid<Sheep>(config.flock.perception),
   };
 }

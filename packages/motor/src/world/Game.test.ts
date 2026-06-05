@@ -202,3 +202,20 @@ describe("dog control integration", () => {
     expect(() => game.update(1 / 60)).not.toThrow();
   });
 });
+
+describe("bark & flee integration", () => {
+  it("a barking dog drives a nearby sheep away from it", () => {
+    const dog = createDog({ x: 150, y: 150 });
+    const sheep = [createSheep({ x: 170, y: 150 }, defaultSheepTraits())]; // 20px east, within bark radius
+    const game = new Game(createWorld(sheep, undefined, [], null, dog));
+    const intent = { moveDir: { x: 0, y: 0 }, sprint: false, bark: true };
+
+    const startDist = Math.hypot(sheep[0]!.pos.x - dog.pos.x, sheep[0]!.pos.y - dog.pos.y);
+    for (let i = 0; i < 120; i++) game.update(1 / 60, intent);
+    const endDist = Math.hypot(sheep[0]!.pos.x - dog.pos.x, sheep[0]!.pos.y - dog.pos.y);
+
+    expect(endDist).toBeGreaterThan(startDist + 15);
+    expect(sheep[0]!.pos.x).toBeGreaterThan(170);
+    expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
+  });
+});

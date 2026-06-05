@@ -1,7 +1,7 @@
 import type { BehaviorNode } from "../steering/types.js";
 import type { SheepTraits } from "../entities/Sheep.js";
 import { blend } from "../steering/Behavior.js";
-import { separation, cohesion, follow, graze, obstacleAvoid } from "./behaviors.js";
+import { separation, cohesion, follow, graze, obstacleAvoid, fleeStress } from "./behaviors.js";
 import { config } from "../config.js";
 
 // The sheep's root behavior tree: graze (follow the grass gradient) blended with
@@ -9,6 +9,7 @@ import { config } from "../config.js";
 export function buildSheepTree(traits: SheepTraits): BehaviorNode {
   const w = config.flock.weights;
   return blend([
+    { node: fleeStress(), weight: config.flee.weight },
     { node: obstacleAvoid(config.obstacleAvoid.avoidRadius), weight: config.obstacleAvoid.weight },
     { node: graze(), weight: config.graze.weight },
     { node: separation(traits.personalSpace), weight: w.separation },

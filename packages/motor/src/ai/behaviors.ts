@@ -145,3 +145,33 @@ export function obstacleAvoid(avoidRadius: number): BehaviorNode {
     },
   };
 }
+
+// Steer away from stress sources within range, weighted by intensity and
+// proximity (closer + stronger => more push). Reynolds steer toward the away dir.
+export function fleeStress(): BehaviorNode {
+  return {
+    run(e, ctx, out) {
+      let ax = 0;
+      let ay = 0;
+      for (const s of ctx.stress) {
+        const dx = e.pos.x - s.pos.x;
+        const dy = e.pos.y - s.pos.y;
+        const d = Math.hypot(dx, dy);
+        if (d > 0 && d < s.radius) {
+          const strength = (s.intensity * (s.radius - d)) / s.radius;
+          ax += (dx / d) * strength;
+          ay += (dy / d) * strength;
+        }
+      }
+      const m = Math.hypot(ax, ay);
+      if (m === 0) {
+        out.x = 0;
+        out.y = 0;
+        return "fired";
+      }
+      out.x = (ax / m) * e.maxSpeed - e.vel.x;
+      out.y = (ay / m) * e.maxSpeed - e.vel.y;
+      return "fired";
+    },
+  };
+}
