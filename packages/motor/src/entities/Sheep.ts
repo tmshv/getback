@@ -2,7 +2,7 @@ import type { Vec2 } from "@getback/math";
 import type { Mobile } from "../types.js";
 import type { BehaviorNode } from "../steering/types.js";
 import { config } from "../config.js";
-import { buildFlockTree } from "../ai/trees.js";
+import { buildSheepTree } from "../ai/trees.js";
 
 export interface SheepTraits {
   maxSpeed: number;
@@ -41,6 +41,6 @@ export function createSheep(pos: Vec2, traits: SheepTraits): Sheep {
     traits,
     drives: { hunger: 0 },
     neighbors: [],
-    root: buildFlockTree(traits),
+    root: buildSheepTree(traits),
   };
 }
