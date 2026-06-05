@@ -192,7 +192,9 @@ describe("vec2", () => {
     expect(truncate({ x: 6, y: 8 }, 5)).toEqual({ x: 3, y: 4 });
   });
   it("computes a left perpendicular", () => {
-    expect(perp({ x: 1, y: 0 })).toEqual({ x: 0, y: 1 });
+    const p = perp({ x: 1, y: 0 });
+    expect(p.x).toBeCloseTo(0); // tolerant of -0
+    expect(p.y).toBe(1);
   });
 });
 ```
@@ -231,9 +233,8 @@ export const truncate = (a: Vec2, max: number): Vec2 => {
   return l > max && l > 0 ? scale(a, max / l) : { x: a.x, y: a.y };
 };
 
-// left-hand perpendicular (90° CCW). Guard `-a.y` against negative zero so that
-// perp({x:1,y:0}) === {x:0,y:1} under deep equality (Vitest's toEqual treats -0 ≠ 0).
-export const perp = (a: Vec2): Vec2 => ({ x: a.y === 0 ? 0 : -a.y, y: a.x });
+// left-hand perpendicular (90° CCW)
+export const perp = (a: Vec2): Vec2 => ({ x: -a.y, y: a.x });
 ```
 
 - [ ] **Step 5: Run the test to verify it passes**
@@ -441,7 +442,10 @@ export function makeRng(seed: number): Rng {
   const float = () => u32() / 0x100000000;
   const int = (min: number, max: number) => prand.unsafeUniformIntDistribution(min, max, gen);
   const range = (min: number, max: number) => min + float() * (max - min);
-  const pick = <T>(items: readonly T[]): T => items[int(0, items.length - 1)]!;
+  const pick = <T>(items: readonly T[]): T => {
+    if (items.length === 0) throw new RangeError("pick from empty array");
+    return items[int(0, items.length - 1)]!;
+  };
   return { float, int, range, pick };
 }
 ```
