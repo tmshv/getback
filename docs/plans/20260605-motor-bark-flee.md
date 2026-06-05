@@ -202,19 +202,19 @@ In `packages/motor/src/systems/SteeringSystem.ts`: add `import type { StressSour
 
 In `packages/motor/src/ai/behaviors.test.ts`: add `flee` to the `./behaviors.js` import and `import type { StressSource } from "../scare/StressSource.js";`. **Add `stress: [],` to EVERY existing context literal in the file** (they currently look like `{ neighbors: [...], grass: noGrass, obstacles: [], dt: 0 }`). Then append:
 ```ts
-describe("flee", () => {
+describe("fleeStress", () => {
   it("steers away from a nearby stress source", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const src: StressSource = { kind: "bark", pos: { x: 10, y: 0 }, radius: 70, intensity: 1 };
     const out = { x: 0, y: 0 };
-    flee().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
+    fleeStress().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
     expect(out.x).toBeLessThan(0); // away from the source at +x
   });
   it("ignores stress sources out of range", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const src: StressSource = { kind: "bark", pos: { x: 500, y: 0 }, radius: 70, intensity: 1 };
     const out = { x: 1, y: 1 };
-    flee().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
+    fleeStress().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
     expect(out).toEqual({ x: 0, y: 0 });
   });
 });
@@ -235,7 +235,7 @@ Append to `packages/motor/src/ai/behaviors.ts` (add `import type { StressSource 
 ```ts
 // Steer away from stress sources within range, weighted by intensity and
 // proximity (closer + stronger => more push). Reynolds steer toward the away dir.
-export function flee(): BehaviorNode {
+export function fleeStress(): BehaviorNode {
   return {
     run(e, ctx, out) {
       let ax = 0;
@@ -268,9 +268,9 @@ export function flee(): BehaviorNode {
 
 In `packages/motor/src/ai/trees.ts`: import `flee` and add it as the FIRST blend child (safety/scatter outranks everything):
 ```ts
-import { separation, cohesion, follow, graze, obstacleAvoid, flee } from "./behaviors.js";
+import { separation, cohesion, follow, graze, obstacleAvoid, fleeStress } from "./behaviors.js";
 // ...the blend's first element:
-    { node: flee(), weight: config.flee.weight },
+    { node: fleeStress(), weight: config.flee.weight },
 ```
 (keep obstacleAvoid/graze/separation/cohesion/follow after it).
 
@@ -331,7 +331,7 @@ In `packages/motor/src/index.ts`, add:
 export type { StressSource, StressKind } from "./scare/StressSource.js";
 export { scareSystem } from "./systems/ScareSystem.js";
 ```
-and add `flee` to the existing `./ai/behaviors.js` export line.
+and add `fleeStress` to the existing `./ai/behaviors.js` export line.
 
 - [ ] **Step 4: Add the integration test**
 

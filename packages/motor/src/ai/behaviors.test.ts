@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { separation, cohesion, follow, graze, obstacleAvoid, flee } from "./behaviors.js";
+import { separation, cohesion, follow, graze, obstacleAvoid, fleeStress } from "./behaviors.js";
 import type { Mobile } from "../types.js";
 import type { StressSource } from "../scare/StressSource.js";
 import { createGrassField, setDensityAt } from "../grass/GrassField.js";
@@ -94,19 +94,19 @@ describe("obstacleAvoid", () => {
   });
 });
 
-describe("flee", () => {
+describe("fleeStress", () => {
   it("steers away from a nearby stress source", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const src: StressSource = { kind: "bark", pos: { x: 10, y: 0 }, radius: 70, intensity: 1 };
     const out = { x: 0, y: 0 };
-    flee().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
+    fleeStress().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
     expect(out.x).toBeLessThan(0);
   });
   it("ignores stress sources out of range", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const src: StressSource = { kind: "bark", pos: { x: 500, y: 0 }, radius: 70, intensity: 1 };
     const out = { x: 1, y: 1 };
-    flee().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
+    fleeStress().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
     expect(out).toEqual({ x: 0, y: 0 });
   });
 });
