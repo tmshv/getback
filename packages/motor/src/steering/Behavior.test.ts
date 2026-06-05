@@ -37,7 +37,7 @@ describe("blend", () => {
       { node: constNode(0, 3), weight: 2 },
     ]);
     const out = { x: 0, y: 0 };
-    node.run(agent(100), { neighbors: [], grass: noGrass, obstacles: [], dt: 0 }, out);
+    node.run(agent(100), { neighbors: [], grass: noGrass, obstacles: [], stress: [], dt: 0 }, out);
     expect(out).toEqual({ x: 2, y: 6 });
   });
 
@@ -47,7 +47,7 @@ describe("blend", () => {
       { node: constNode(0, 50), weight: 1 },
     ]);
     const out = { x: 0, y: 0 };
-    node.run(agent(80), { neighbors: [], grass: noGrass, obstacles: [], dt: 0 }, out);
+    node.run(agent(80), { neighbors: [], grass: noGrass, obstacles: [], stress: [], dt: 0 }, out);
     expect(out.x).toBeCloseTo(80);
     expect(out.y).toBeCloseTo(0);
   });
@@ -58,7 +58,7 @@ describe("blend", () => {
       { node: constNode(5, 0), weight: 1 },
     ]);
     const out = { x: 0, y: 0 };
-    node.run(agent(100), { neighbors: [], grass: noGrass, obstacles: [], dt: 0 }, out);
+    node.run(agent(100), { neighbors: [], grass: noGrass, obstacles: [], stress: [], dt: 0 }, out);
     expect(out).toEqual({ x: 5, y: 0 });
   });
 });

@@ -28,7 +28,7 @@ export class Game {
     grassSystem(grass, sheep, step);
     driveSystem(sheep, grass, step);
     neighborhoodSystem(sheep, grid);
-    steeringSystem(sheep, { grass, obstacles }, step);
+    steeringSystem(sheep, { grass, obstacles, stress: [] }, step);
     if (dog) dogControlSystem(dog, intent);
     movementSystem(sheep, step);
     if (dog) integrate(dog, step);

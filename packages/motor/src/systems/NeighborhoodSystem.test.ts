@@ -46,7 +46,7 @@ describe("steeringSystem", () => {
     const sheep = [a, b];
     const grid = new UniformGrid<Sheep>(40);
     neighborhoodSystem(sheep, grid);
-    steeringSystem(sheep, { grass: noGrass, obstacles: [] }, 1 / 60);
+    steeringSystem(sheep, { grass: noGrass, obstacles: [], stress: [] }, 1 / 60);
     expect(Math.hypot(a.force.x, a.force.y)).toBeGreaterThan(0);
     expect(a.force.x).toBeGreaterThan(0);
   });
