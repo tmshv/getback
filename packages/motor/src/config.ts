@@ -12,5 +12,8 @@ export const config = {
     moveThreshold: 2, // px/s: a neighbour faster than this counts as "moving" for follow
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
   },
+  grass: { cellSize: 16, regrowRate: 0.03, depleteRate: 0.4, initial: 1 },
+  drives: { hungerRate: 0.05, grazeRate: 0.5 },
+  graze: { weight: 1.0 },
   bounds: { x: 0, y: 0, w: 480, h: 270 },
 } as const;
