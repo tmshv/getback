@@ -1,0 +1,17 @@
+export type { Direction, Mobile, DogIntent } from "./types.js";
+export { directionFromVelocity } from "./direction.js";
+export { config } from "./config.js";
+export { seek, flee, arrive } from "./steering/primitives.js";
+export type { Status, SteerContext, BehaviorNode, Predicate } from "./steering/types.js";
+export { blend } from "./steering/Behavior.js";
+export type { WeightedChild } from "./steering/Behavior.js";
+export { separation, cohesion, follow } from "./ai/behaviors.js";
+export { buildFlockTree } from "./ai/trees.js";
+export type { Sheep, SheepTraits } from "./entities/Sheep.js";
+export { createSheep, defaultSheepTraits } from "./entities/Sheep.js";
+export { neighborhoodSystem } from "./systems/NeighborhoodSystem.js";
+export { steeringSystem } from "./systems/SteeringSystem.js";
+export { movementSystem, integrate } from "./systems/MovementSystem.js";
+export type { World, Rect } from "./world/World.js";
+export { createWorld } from "./world/World.js";
+export { Game } from "./world/Game.js";
