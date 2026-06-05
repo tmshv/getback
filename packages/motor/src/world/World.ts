@@ -4,6 +4,7 @@ import type { GrassField } from "../grass/GrassField.js";
 import { createGrassField } from "../grass/GrassField.js";
 import type { Obstacle } from "../entities/Obstacle.js";
 import type { Pen } from "./Pen.js";
+import type { Dog } from "../entities/Dog.js";
 import { config } from "../config.js";
 
 export interface Rect {
@@ -19,6 +20,7 @@ export interface World {
   grass: GrassField;
   obstacles: Obstacle[];
   pen: Pen | null;
+  dog: Dog | null;
   grid: UniformGrid<Sheep>;
 }
 
@@ -39,6 +41,7 @@ export function createWorld(
   grass: GrassField = defaultGrass(),
   obstacles: Obstacle[] = [],
   pen: Pen | null = null,
+  dog: Dog | null = null,
 ): World {
   return {
     sheep,
@@ -46,6 +49,7 @@ export function createWorld(
     grass,
     obstacles,
     pen,
+    dog,
     grid: new UniformGrid<Sheep>(config.flock.perception),
   };
 }

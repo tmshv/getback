@@ -5,6 +5,7 @@ import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 import type { Sheep } from "../entities/Sheep.js";
 import { createGrassField, setDensityAt } from "../grass/GrassField.js";
 import { createObstacle } from "../entities/Obstacle.js";
+import { createDog } from "../entities/Dog.js";
 import { makeRng } from "@getback/math";
 import { generatePen } from "../world/penGen.js";
 import { buildPen, penContains } from "../world/Pen.js";
@@ -169,5 +170,35 @@ describe("one-way gate containment integration", () => {
     }
     expect(minX).toBeLessThan(115); // genuinely pressed the gate (non-vacuous)
     expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
+  });
+});
+
+describe("dog control integration", () => {
+  it("the dog drives toward the intent direction", () => {
+    const dog = createDog({ x: 100, y: 100 });
+    const game = new Game(createWorld([], undefined, [], null, dog));
+    const intent = { moveDir: { x: 1, y: 0 }, sprint: false, bark: false };
+    for (let i = 0; i < 60; i++) game.update(1 / 60, intent);
+    expect(dog.pos.x).toBeGreaterThan(110);
+    expect(Math.abs(dog.pos.y - 100)).toBeLessThan(2);
+    expect(dog.facing).toBe("right");
+  });
+
+  it("the dog cannot drive through an obstacle", () => {
+    const dog = createDog({ x: 100, y: 100 });
+    const rock = createObstacle("rock", { x: 160, y: 100 }, 14);
+    const game = new Game(createWorld([], undefined, [rock], null, dog));
+    const intent = { moveDir: { x: 1, y: 0 }, sprint: true, bark: false };
+    for (let i = 0; i < 300; i++) {
+      game.update(1 / 60, intent);
+      const d = Math.hypot(dog.pos.x - rock.pos.x, dog.pos.y - rock.pos.y);
+      expect(d).toBeGreaterThan(dog.radius + rock.radius - 0.5);
+    }
+    expect(dog.pos.x).toBeLessThan(rock.pos.x);
+  });
+
+  it("update() still works without an intent argument (neutral)", () => {
+    const game = new Game(createWorld());
+    expect(() => game.update(1 / 60)).not.toThrow();
   });
 });
