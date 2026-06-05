@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { grassSystem } from "./GrassSystem.js";
-import { createGrassField, densityAt, setDensityAt } from "../grass/GrassField.js";
+import { createGrassField, densityAt } from "../grass/GrassField.js";
 import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 
 describe("grassSystem", () => {

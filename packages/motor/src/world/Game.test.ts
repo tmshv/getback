@@ -3,7 +3,7 @@ import { Game } from "./Game.js";
 import { createWorld } from "./World.js";
 import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 import type { Sheep } from "../entities/Sheep.js";
-import { createGrassField, setDensityAt, densityAt } from "../grass/GrassField.js";
+import { createGrassField, setDensityAt } from "../grass/GrassField.js";
 
 function centroid(sheep: Sheep[]) {
   const c = { x: 0, y: 0 };
