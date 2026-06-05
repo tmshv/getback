@@ -14,18 +14,22 @@ export interface PenGenOptions {
   minGateWidth: number;
 }
 
-// A random simple polygon: pick N vertices at random angles (SORTED) and random
-// radii around the center. Angle-sorting guarantees a non-self-intersecting
-// (star-shaped) polygon. The gate is the widest edge (wide enough to admit sheep).
+// A random simple polygon. Each vertex is placed in its OWN angular sector (with a
+// margin from the sector edges), so consecutive vertices stay well separated — this
+// guarantees a fat, non-degenerate star-shaped polygon (no slivers) whose interior
+// reliably contains both the generation center and the vertex-average centroid.
+// Angles span [-π, π) so the sorted ring matches atan2's range. The gate is the
+// widest edge (>= every other edge, comfortably above minGateWidth for these radii).
 export function generatePen(rng: Rng, opts: PenGenOptions): PenShape {
   const n = rng.int(opts.minVerts, opts.maxVerts);
-  const angles: number[] = [];
-  for (let i = 0; i < n; i++) angles.push(rng.range(-Math.PI, Math.PI));
-  angles.sort((a, b) => a - b);
-  const outline: Vec2[] = angles.map((a) => {
+  const sector = (Math.PI * 2) / n;
+  const margin = sector * 0.15;
+  const outline: Vec2[] = [];
+  for (let i = 0; i < n; i++) {
+    const angle = -Math.PI + i * sector + rng.range(margin, sector - margin);
     const r = rng.range(opts.rMin, opts.rMax);
-    return { x: opts.center.x + Math.cos(a) * r, y: opts.center.y + Math.sin(a) * r };
-  });
+    outline.push({ x: opts.center.x + Math.cos(angle) * r, y: opts.center.y + Math.sin(angle) * r });
+  }
 
   let gateEdge = 0;
   let best = -1;

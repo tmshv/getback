@@ -20,12 +20,11 @@ export interface Pen {
 // (point-in-polygon), and the same edges MINUS the gate are the solid fence.
 export function buildPen(outline: Vec2[], gateEdge: number): Pen {
   const n = outline.length;
+  const mouth: Segment = { a: outline[gateEdge]!, b: outline[(gateEdge + 1) % n]! };
   const fences: Segment[] = [];
-  let mouth: Segment = { a: outline[0]!, b: outline[1 % n]! };
   for (let i = 0; i < n; i++) {
-    const seg: Segment = { a: outline[i]!, b: outline[(i + 1) % n]! };
-    if (i === gateEdge) mouth = seg;
-    else fences.push(seg);
+    if (i === gateEdge) continue;
+    fences.push({ a: outline[i]!, b: outline[(i + 1) % n]! });
   }
 
   // inward normal of the gate edge, from polygon winding. For a CCW ring the
