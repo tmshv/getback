@@ -2,6 +2,7 @@ import { UniformGrid } from "@getback/spatial";
 import type { Sheep } from "../entities/Sheep.js";
 import type { GrassField } from "../grass/GrassField.js";
 import { createGrassField } from "../grass/GrassField.js";
+import type { Obstacle } from "../entities/Obstacle.js";
 import { config } from "../config.js";
 
 export interface Rect {
@@ -15,6 +16,7 @@ export interface World {
   sheep: Sheep[];
   bounds: Rect; // reserved: boundary containment / bounds-avoidance steering arrives in a later plan
   grass: GrassField;
+  obstacles: Obstacle[];
   grid: UniformGrid<Sheep>;
 }
 
@@ -30,11 +32,16 @@ function defaultGrass(): GrassField {
   });
 }
 
-export function createWorld(sheep: Sheep[] = [], grass: GrassField = defaultGrass()): World {
+export function createWorld(
+  sheep: Sheep[] = [],
+  grass: GrassField = defaultGrass(),
+  obstacles: Obstacle[] = [],
+): World {
   return {
     sheep,
     bounds: { ...config.bounds },
     grass,
+    obstacles,
     grid: new UniformGrid<Sheep>(config.flock.perception),
   };
 }

@@ -15,5 +15,6 @@ export const config = {
   grass: { cellSize: 16, regrowRate: 0.03, depleteRate: 0.4, initial: 1 },
   drives: { hungerRate: 0.05, grazeRate: 0.5 },
   graze: { weight: 1.0 },
+  obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
   bounds: { x: 0, y: 0, w: 480, h: 270 },
 } as const;

@@ -1,12 +1,17 @@
-import type { GrassField } from "../grass/GrassField.js";
 import type { Sheep } from "../entities/Sheep.js";
+import type { GrassField } from "../grass/GrassField.js";
+import type { Obstacle } from "../entities/Obstacle.js";
 import type { SteerContext } from "../steering/types.js";
 
-// Evaluate each sheep's behavior tree, writing the resulting steering force into
-// `sheep.force` for MovementSystem to integrate.
-export function steeringSystem(sheep: Sheep[], grass: GrassField, dt: number): void {
+// World refs the steering trees read each frame (grows as more behaviors land).
+export interface SteerEnv {
+  grass: GrassField;
+  obstacles: readonly Obstacle[];
+}
+
+export function steeringSystem(sheep: Sheep[], env: SteerEnv, dt: number): void {
   for (const s of sheep) {
-    const ctx: SteerContext = { neighbors: s.neighbors, grass, dt };
+    const ctx: SteerContext = { neighbors: s.neighbors, grass: env.grass, obstacles: env.obstacles, dt };
     s.root.run(s, ctx, s.force);
   }
 }

@@ -1,6 +1,7 @@
 import type { Vec2 } from "@getback/math";
 import type { Mobile } from "../types.js";
 import type { GrassField } from "../grass/GrassField.js";
+import type { Obstacle } from "../entities/Obstacle.js";
 
 export type Status = "fired" | "skipped";
 
@@ -8,6 +9,7 @@ export type Status = "fired" | "skipped";
 export interface SteerContext {
   neighbors: readonly Mobile[];
   grass: GrassField;
+  obstacles: readonly Obstacle[];
   dt: number;
 }
 

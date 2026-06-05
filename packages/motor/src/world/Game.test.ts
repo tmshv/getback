@@ -4,6 +4,7 @@ import { createWorld } from "./World.js";
 import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 import type { Sheep } from "../entities/Sheep.js";
 import { createGrassField, setDensityAt } from "../grass/GrassField.js";
+import { createObstacle } from "../entities/Obstacle.js";
 
 function centroid(sheep: Sheep[]) {
   const c = { x: 0, y: 0 };
@@ -88,5 +89,33 @@ describe("autonomous grazing integration", () => {
     // numerically sane
     expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
     expect(Number.isFinite(sheep[0]!.pos.y)).toBe(true);
+  });
+});
+
+describe("obstacle collision integration", () => {
+  it("a sheep driven toward an obstacle never ends up inside it", () => {
+    // Strong eastward grass gradient drives the sheep east; a rock sits in its path.
+    const cols = 30, rows = 18, cs = 16;
+    const grass = createGrassField({ cols, rows, cellSize: cs, regrowRate: 0, depleteRate: 0, initial: 0 });
+    for (let cx = 0; cx < cols; cx++) {
+      const d = 0.1 + 0.9 * (cx / (cols - 1));
+      for (let cy = 0; cy < rows; cy++) setDensityAt(grass, cx * cs + 8, cy * cs + 8, d);
+    }
+    const sheep = [createSheep({ x: 120, y: 140 }, defaultSheepTraits())];
+    const rock = createObstacle("rock", { x: 240, y: 140 }, 14); // directly east, in the path
+    const game = new Game(createWorld(sheep, grass, [rock]));
+
+    let minClearance = Infinity;
+    for (let i = 0; i < 1800; i++) {
+      game.update(1 / 60);
+      const d = Math.hypot(sheep[0]!.pos.x - rock.pos.x, sheep[0]!.pos.y - rock.pos.y);
+      minClearance = Math.min(minClearance, d);
+      // INVARIANT every frame: never penetrate (allow a tiny epsilon for float push-out)
+      expect(d).toBeGreaterThan(sheep[0]!.radius + rock.radius - 0.5);
+    }
+    // It actually engaged the obstacle region (got within the avoidance ring),
+    // otherwise the no-penetration invariant would be vacuous.
+    expect(minClearance).toBeLessThan(sheep[0]!.radius + rock.radius + 22);
+    expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
   });
 });

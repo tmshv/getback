@@ -114,3 +114,34 @@ export function graze(): BehaviorNode {
     },
   };
 }
+
+// Soft look-ahead repulsion: steer away from obstacles within (radius+avoidRadius),
+// stronger the closer they are. Reynolds steer toward the away-direction.
+export function obstacleAvoid(avoidRadius: number): BehaviorNode {
+  return {
+    run(e, ctx, out) {
+      let ax = 0;
+      let ay = 0;
+      for (const o of ctx.obstacles) {
+        const dx = e.pos.x - o.pos.x;
+        const dy = e.pos.y - o.pos.y;
+        const d = Math.hypot(dx, dy);
+        const range = o.radius + avoidRadius;
+        if (d > 0 && d < range) {
+          const strength = (range - d) / range;
+          ax += (dx / d) * strength;
+          ay += (dy / d) * strength;
+        }
+      }
+      const m = Math.hypot(ax, ay);
+      if (m === 0) {
+        out.x = 0;
+        out.y = 0;
+        return "fired";
+      }
+      out.x = (ax / m) * e.maxSpeed - e.vel.x;
+      out.y = (ay / m) * e.maxSpeed - e.vel.y;
+      return "fired";
+    },
+  };
+}
