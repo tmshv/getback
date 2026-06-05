@@ -1,11 +1,13 @@
 import type { Vec2 } from "@getback/math";
 import type { Mobile } from "../types.js";
+import type { GrassField } from "../grass/GrassField.js";
 
 export type Status = "fired" | "skipped";
 
 // Read-only world refs a behavior may need. Grows in later plans (grass, pen, …).
 export interface SteerContext {
   neighbors: readonly Mobile[];
+  grass: GrassField;
   dt: number;
 }
 

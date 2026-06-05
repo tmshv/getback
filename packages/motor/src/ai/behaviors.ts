@@ -1,6 +1,7 @@
 import type { Mobile } from "../types.js";
 import type { BehaviorNode } from "../steering/types.js";
 import { seek } from "../steering/primitives.js";
+import { gradientAt } from "../grass/GrassField.js";
 
 // All three return a Reynolds steering force (desiredVelocity - velocity) so
 // their magnitudes are comparable for the weighted blend. Each writes into `out`
@@ -89,6 +90,26 @@ export function follow(moveThreshold: number): BehaviorNode {
       }
       out.x = (vx / m) * e.maxSpeed - e.vel.x;
       out.y = (vy / m) * e.maxSpeed - e.vel.y;
+      return "fired";
+    },
+  };
+}
+
+// Follow the grass-density gradient toward greener cells (Reynolds steer toward
+// the desired direction). Zero gradient (uniform/flat grass) => no force.
+export function graze(): BehaviorNode {
+  const g = { x: 0, y: 0 };
+  return {
+    run(e, ctx, out) {
+      gradientAt(ctx.grass, e.pos.x, e.pos.y, g);
+      const m = Math.hypot(g.x, g.y);
+      if (m === 0) {
+        out.x = 0;
+        out.y = 0;
+        return "fired";
+      }
+      out.x = (g.x / m) * e.maxSpeed - e.vel.x;
+      out.y = (g.y / m) * e.maxSpeed - e.vel.y;
       return "fired";
     },
   };

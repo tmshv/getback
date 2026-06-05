@@ -4,6 +4,9 @@ import { neighborhoodSystem } from "./NeighborhoodSystem.js";
 import { steeringSystem } from "./SteeringSystem.js";
 import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 import type { Sheep } from "../entities/Sheep.js";
+import { createGrassField } from "../grass/GrassField.js";
+
+const noGrass = createGrassField({ cols: 1, rows: 1, cellSize: 1000, regrowRate: 0, depleteRate: 0, initial: 0 });
 
 describe("neighborhoodSystem", () => {
   it("fills each sheep's neighbors within its perception radius, excluding itself", () => {
@@ -43,7 +46,7 @@ describe("steeringSystem", () => {
     const sheep = [a, b];
     const grid = new UniformGrid<Sheep>(40);
     neighborhoodSystem(sheep, grid);
-    steeringSystem(sheep, 1 / 60);
+    steeringSystem(sheep, noGrass, 1 / 60);
     expect(Math.hypot(a.force.x, a.force.y)).toBeGreaterThan(0);
     expect(a.force.x).toBeGreaterThan(0);
   });
