@@ -23,3 +23,8 @@ export type { Obstacle, ObstacleKind } from "./entities/Obstacle.js";
 export { createObstacle } from "./entities/Obstacle.js";
 export { collisionSystem } from "./systems/CollisionSystem.js";
 export type { SteerEnv } from "./systems/SteeringSystem.js";
+export type { PenShape, PenGenOptions } from "./world/penGen.js";
+export { generatePen } from "./world/penGen.js";
+export type { Pen, Segment } from "./world/Pen.js";
+export { buildPen, penContains } from "./world/Pen.js";
+export { penSystem } from "./systems/PenSystem.js";

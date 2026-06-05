@@ -108,18 +108,21 @@ export interface PenGenOptions {
   minGateWidth: number;
 }
 
-// A random simple polygon: pick N vertices at random angles (SORTED) and random
-// radii around the center. Angle-sorting guarantees a non-self-intersecting
-// (star-shaped) polygon. The gate is one edge wide enough to admit sheep.
+// A random simple polygon. Each vertex is placed in its OWN angular sector (with a
+// margin), so consecutive vertices stay well separated — this guarantees a fat,
+// non-degenerate star-shaped polygon (no slivers) whose interior reliably contains
+// the vertex-average centroid. Angles span [-π, π) so the sorted ring matches
+// atan2's range. The gate is the widest edge.
 export function generatePen(rng: Rng, opts: PenGenOptions): PenShape {
   const n = rng.int(opts.minVerts, opts.maxVerts);
-  const angles: number[] = [];
-  for (let i = 0; i < n; i++) angles.push(rng.range(0, Math.PI * 2));
-  angles.sort((a, b) => a - b);
-  const outline: Vec2[] = angles.map((a) => {
+  const sector = (Math.PI * 2) / n;
+  const margin = sector * 0.15;
+  const outline: Vec2[] = [];
+  for (let i = 0; i < n; i++) {
+    const angle = -Math.PI + i * sector + rng.range(margin, sector - margin);
     const r = rng.range(opts.rMin, opts.rMax);
-    return { x: opts.center.x + Math.cos(a) * r, y: opts.center.y + Math.sin(a) * r };
-  });
+    outline.push({ x: opts.center.x + Math.cos(angle) * r, y: opts.center.y + Math.sin(angle) * r });
+  }
 
   // choose the widest edge as the gate, guaranteeing >= minGateWidth when possible.
   let gateEdge = 0;
@@ -239,12 +242,11 @@ export interface Pen {
 // (point-in-polygon), and the same edges MINUS the gate are the solid fence.
 export function buildPen(outline: Vec2[], gateEdge: number): Pen {
   const n = outline.length;
+  const mouth: Segment = { a: outline[gateEdge]!, b: outline[(gateEdge + 1) % n]! };
   const fences: Segment[] = [];
-  let mouth: Segment = { a: outline[0]!, b: outline[1 % n]! };
   for (let i = 0; i < n; i++) {
-    const seg: Segment = { a: outline[i]!, b: outline[(i + 1) % n]! };
-    if (i === gateEdge) mouth = seg;
-    else fences.push(seg);
+    if (i === gateEdge) continue;
+    fences.push({ a: outline[i]!, b: outline[(i + 1) % n]! });
   }
 
   // inward normal of the gate edge, from polygon winding. For a CCW ring the

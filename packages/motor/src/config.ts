@@ -16,5 +16,6 @@ export const config = {
   drives: { hungerRate: 0.05, grazeRate: 0.5 },
   graze: { weight: 1.0 },
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
+  pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24 },
   bounds: { x: 0, y: 0, w: 480, h: 270 },
 } as const;
