@@ -483,8 +483,10 @@ describe("obstacle collision integration", () => {
       // INVARIANT every frame: never penetrate (allow a tiny epsilon for float push-out)
       expect(d).toBeGreaterThan(sheep[0]!.radius + rock.radius - 0.5);
     }
-    // It actually reached the rock (otherwise the test proves nothing).
-    expect(minClearance).toBeLessThan(sheep[0]!.radius + rock.radius + 6);
+    // It actually engaged the obstacle region (got within the avoidance ring),
+    // otherwise the no-penetration invariant would be vacuous. Soft avoidance
+    // (obstacleAvoid) keeps it near this boundary; hard collision is the backstop.
+    expect(minClearance).toBeLessThan(sheep[0]!.radius + rock.radius + 22); // ~ within avoidRadius(18)+slack
     expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
   });
 });
