@@ -42,3 +42,12 @@ describe("integrate (semi-implicit Euler)", () => {
     expect(e.vel.x).toBeCloseTo(10 * (1 / 30));
   });
 });
+
+describe("prevPos snapshot", () => {
+  it("records the position from before the move", () => {
+    const e = agent({ pos: { x: 10, y: 20 }, force: { x: 100, y: 0 } });
+    integrate(e, 0.1);
+    expect(e.prevPos).toEqual({ x: 10, y: 20 });
+    expect(e.pos.x).toBeGreaterThan(10);
+  });
+});

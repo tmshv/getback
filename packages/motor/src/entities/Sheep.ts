@@ -33,6 +33,7 @@ export function defaultSheepTraits(): SheepTraits {
 export function createSheep(pos: Vec2, traits: SheepTraits): Sheep {
   return {
     pos: { x: pos.x, y: pos.y },
+    prevPos: { x: pos.x, y: pos.y },
     vel: { x: 0, y: 0 },
     force: { x: 0, y: 0 },
     radius: config.flock.radius,
