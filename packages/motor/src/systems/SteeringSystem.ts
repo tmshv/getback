@@ -6,7 +6,7 @@ import type { SteerContext } from "../steering/types.js";
 // `sheep.force` for MovementSystem to integrate.
 export function steeringSystem(sheep: Sheep[], grass: GrassField, dt: number): void {
   for (const s of sheep) {
-    const ctx: SteerContext = { neighbors: s.neighbors, grass, dt };
+    const ctx: SteerContext = { neighbors: s.neighbors, grass, obstacles: [], dt };
     s.root.run(s, ctx, s.force);
   }
 }
