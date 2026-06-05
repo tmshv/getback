@@ -1,4 +1,7 @@
 export type { Direction, Mobile, DogIntent } from "./types.js";
+export type { Dog } from "./entities/Dog.js";
+export { createDog } from "./entities/Dog.js";
+export { dogControlSystem } from "./systems/DogControlSystem.js";
 export { directionFromVelocity } from "./direction.js";
 export { config } from "./config.js";
 export { seek, flee, arrive } from "./steering/primitives.js";
