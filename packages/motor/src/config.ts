@@ -18,5 +18,7 @@ export const config = {
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
   pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24 },
   dog: { radius: 6, maxSpeed: 70, maxForce: 400, sprintMult: 1.6, stopGain: 12 },
+  scare: { presenceRadius: 26, presenceIntensity: 0.25, barkRadius: 70, barkIntensity: 1, barkCooldown: 0.8 },
+  flee: { weight: 2.5 },
   bounds: { x: 0, y: 0, w: 480, h: 270 },
 } as const;
