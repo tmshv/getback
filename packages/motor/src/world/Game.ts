@@ -10,6 +10,7 @@ import { penSystem } from "../systems/PenSystem.js";
 import { fenceCollisionSystem } from "../systems/FenceCollisionSystem.js";
 import type { DogIntent } from "../types.js";
 import { dogControlSystem } from "../systems/DogControlSystem.js";
+import { scareSystem } from "../systems/ScareSystem.js";
 
 // Frozen so the shared default can never be mutated by a future consumer.
 const NEUTRAL_INTENT: DogIntent = Object.freeze({
@@ -24,11 +25,12 @@ export class Game {
 
   update(dt: number, intent: DogIntent = NEUTRAL_INTENT): void {
     const step = Math.min(dt, config.dtClampMax);
-    const { sheep, grass, obstacles, pen, grid, dog } = this.world;
+    const { sheep, grass, obstacles, pen, grid, dog, stress } = this.world;
     grassSystem(grass, sheep, step);
     driveSystem(sheep, grass, step);
     neighborhoodSystem(sheep, grid);
-    steeringSystem(sheep, { grass, obstacles, stress: [] }, step);
+    scareSystem(stress, dog, intent, step);
+    steeringSystem(sheep, { grass, obstacles, stress }, step);
     if (dog) dogControlSystem(dog, intent);
     movementSystem(sheep, step);
     if (dog) integrate(dog, step);
