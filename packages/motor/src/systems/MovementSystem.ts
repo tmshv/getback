@@ -5,6 +5,12 @@ import { config } from "../config.js";
 // Semi-implicit (symplectic) Euler: update velocity first, then advance position
 // with the NEW velocity. `force` is assumed already accumulated by SteeringSystem.
 export function integrate(e: Mobile, dt: number): void {
+  if (e.prevPos) {
+    e.prevPos.x = e.pos.x;
+    e.prevPos.y = e.pos.y;
+  } else {
+    e.prevPos = { x: e.pos.x, y: e.pos.y };
+  }
   const fl = Math.hypot(e.force.x, e.force.y);
   if (fl > e.maxForce && fl > 0) {
     const s = e.maxForce / fl;

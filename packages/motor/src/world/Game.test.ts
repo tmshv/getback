@@ -7,7 +7,7 @@ import { createGrassField, setDensityAt } from "../grass/GrassField.js";
 import { createObstacle } from "../entities/Obstacle.js";
 import { makeRng } from "@getback/math";
 import { generatePen } from "../world/penGen.js";
-import { buildPen } from "../world/Pen.js";
+import { buildPen, penContains } from "../world/Pen.js";
 import { config } from "../config.js";
 
 function centroid(sheep: Sheep[]) {
@@ -137,5 +137,37 @@ describe("pen capture integration", () => {
     expect(inside.penned).toBe(true);
     expect(outside.penned).toBe(false);
     expect(pen.contained.has(inside)).toBe(true);
+  });
+});
+
+describe("one-way gate containment integration", () => {
+  it("a penned sheep pulled toward the gate cannot escape", () => {
+    // Axis-aligned square pen 100..200; gate = edge index 3 (left edge), inward = +x.
+    const square = [
+      { x: 100, y: 100 },
+      { x: 200, y: 100 },
+      { x: 200, y: 200 },
+      { x: 100, y: 200 },
+    ];
+    const pen = buildPen(square, 3);
+    // Grass is lush to the WEST (outside the gate) so `graze` pulls the sheep west,
+    // straight at the gate it would otherwise exit through.
+    const grass = createGrassField({ cols: 30, rows: 18, cellSize: 16, regrowRate: 0, depleteRate: 0, initial: 0 });
+    for (let cx = 0; cx < 30; cx++) {
+      const d = 1 - 0.9 * (cx / 29); // 1.0 (west) -> 0.1 (east): gradient points WEST
+      for (let cy = 0; cy < 18; cy++) setDensityAt(grass, cx * 16 + 8, cy * 16 + 8, d);
+    }
+    const sheep = [createSheep({ x: 150, y: 150 }, defaultSheepTraits())]; // inside, center
+    const game = new Game(createWorld(sheep, grass, [], pen));
+
+    let minX = Infinity;
+    for (let i = 0; i < 1800; i++) {
+      game.update(1 / 60);
+      minX = Math.min(minX, sheep[0]!.pos.x);
+      expect(penContains(pen, sheep[0]!.pos)).toBe(true); // INVARIANT: never escapes
+      expect(sheep[0]!.penned).toBe(true);
+    }
+    expect(minX).toBeLessThan(115); // genuinely pressed the gate (non-vacuous)
+    expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
   });
 });

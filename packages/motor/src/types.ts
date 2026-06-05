@@ -12,6 +12,7 @@ export interface Mobile {
   maxSpeed: number;
   maxForce: number;
   facing: Direction;
+  prevPos?: Vec2; // position at the START of the current frame; set by MovementSystem, read by FenceCollisionSystem
 }
 
 // Abstract player input the motor consumes (the app maps keys -> this). Unused
