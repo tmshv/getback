@@ -17,5 +17,6 @@ export const config = {
   graze: { weight: 1.0 },
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
   pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24 },
+  dog: { radius: 6, maxSpeed: 70, maxForce: 400, sprintMult: 1.6, stopGain: 12 },
   bounds: { x: 0, y: 0, w: 480, h: 270 },
 } as const;
