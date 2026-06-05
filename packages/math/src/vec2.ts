@@ -23,4 +23,4 @@ export const truncate = (a: Vec2, max: number): Vec2 => {
 };
 
 // left-hand perpendicular (90° CCW)
-export const perp = (a: Vec2): Vec2 => ({ x: a.y === 0 ? 0 : -a.y, y: a.x });
+export const perp = (a: Vec2): Vec2 => ({ x: -a.y, y: a.x });

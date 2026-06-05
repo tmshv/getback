@@ -24,6 +24,8 @@ describe("vec2", () => {
     expect(truncate({ x: 6, y: 8 }, 5)).toEqual({ x: 3, y: 4 });
   });
   it("computes a left perpendicular", () => {
-    expect(perp({ x: 1, y: 0 })).toEqual({ x: 0, y: 1 });
+    const p = perp({ x: 1, y: 0 });
+    expect(p.x).toBeCloseTo(0); // tolerant of -0
+    expect(p.y).toBe(1);
   });
 });

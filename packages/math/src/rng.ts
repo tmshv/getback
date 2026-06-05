@@ -15,6 +15,9 @@ export function makeRng(seed: number): Rng {
   const float = () => u32() / 0x100000000;
   const int = (min: number, max: number) => prand.unsafeUniformIntDistribution(min, max, gen);
   const range = (min: number, max: number) => min + float() * (max - min);
-  const pick = <T>(items: readonly T[]): T => items[int(0, items.length - 1)]!;
+  const pick = <T>(items: readonly T[]): T => {
+    if (items.length === 0) throw new RangeError("pick from empty array");
+    return items[int(0, items.length - 1)]!;
+  };
   return { float, int, range, pick };
 }
