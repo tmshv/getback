@@ -5,6 +5,10 @@ import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 import type { Sheep } from "../entities/Sheep.js";
 import { createGrassField, setDensityAt } from "../grass/GrassField.js";
 import { createObstacle } from "../entities/Obstacle.js";
+import { makeRng } from "@getback/math";
+import { generatePen } from "../world/penGen.js";
+import { buildPen } from "../world/Pen.js";
+import { config } from "../config.js";
 
 function centroid(sheep: Sheep[]) {
   const c = { x: 0, y: 0 };
@@ -117,5 +121,21 @@ describe("obstacle collision integration", () => {
     // otherwise the no-penetration invariant would be vacuous.
     expect(minClearance).toBeLessThan(sheep[0]!.radius + rock.radius + 22);
     expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
+  });
+});
+
+describe("pen capture integration", () => {
+  it("a generated pen captures sheep placed inside it and not those outside", () => {
+    const shape = generatePen(makeRng(11), { center: { x: 240, y: 135 }, ...config.pen });
+    const pen = buildPen(shape.outline, shape.gateEdge);
+    const inside = createSheep({ x: pen.centroid.x, y: pen.centroid.y }, defaultSheepTraits());
+    const outside = createSheep({ x: 10, y: 10 }, defaultSheepTraits());
+    const game = new Game(createWorld([inside, outside], undefined, [], pen));
+
+    game.update(1 / 60);
+
+    expect(inside.penned).toBe(true);
+    expect(outside.penned).toBe(false);
+    expect(pen.contained.has(inside)).toBe(true);
   });
 });

@@ -3,6 +3,7 @@ import type { Sheep } from "../entities/Sheep.js";
 import type { GrassField } from "../grass/GrassField.js";
 import { createGrassField } from "../grass/GrassField.js";
 import type { Obstacle } from "../entities/Obstacle.js";
+import type { Pen } from "./Pen.js";
 import { config } from "../config.js";
 
 export interface Rect {
@@ -17,6 +18,7 @@ export interface World {
   bounds: Rect; // reserved: boundary containment / bounds-avoidance steering arrives in a later plan
   grass: GrassField;
   obstacles: Obstacle[];
+  pen: Pen | null;
   grid: UniformGrid<Sheep>;
 }
 
@@ -36,12 +38,14 @@ export function createWorld(
   sheep: Sheep[] = [],
   grass: GrassField = defaultGrass(),
   obstacles: Obstacle[] = [],
+  pen: Pen | null = null,
 ): World {
   return {
     sheep,
     bounds: { ...config.bounds },
     grass,
     obstacles,
+    pen,
     grid: new UniformGrid<Sheep>(config.flock.perception),
   };
 }
