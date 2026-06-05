@@ -11,7 +11,12 @@ import { fenceCollisionSystem } from "../systems/FenceCollisionSystem.js";
 import type { DogIntent } from "../types.js";
 import { dogControlSystem } from "../systems/DogControlSystem.js";
 
-const NEUTRAL_INTENT: DogIntent = { moveDir: { x: 0, y: 0 }, sprint: false, bark: false };
+// Frozen so the shared default can never be mutated by a future consumer.
+const NEUTRAL_INTENT: DogIntent = Object.freeze({
+  moveDir: Object.freeze({ x: 0, y: 0 }),
+  sprint: false,
+  bark: false,
+}) as DogIntent;
 
 // Drives one simulation step. The render/app layer calls this each frame.
 export class Game {
