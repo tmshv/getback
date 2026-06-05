@@ -1,0 +1,15 @@
+{
+  "name": "getback",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*", "examples/*"],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}
