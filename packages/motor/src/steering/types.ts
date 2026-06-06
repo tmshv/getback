@@ -3,6 +3,7 @@ import type { Mobile } from "../types.js";
 import type { GrassField } from "../grass/GrassField.js";
 import type { Obstacle } from "../entities/Obstacle.js";
 import type { StressSource } from "../scare/StressSource.js";
+import type { Attractor } from "../entities/Attractor.js";
 
 export type Status = "fired" | "skipped";
 
@@ -16,6 +17,8 @@ export interface SteerContext {
   dt: number;
   penned?: boolean; // true while this sheep is inside the pen (settle, don't graze out)
   penCentroid?: Vec2 | null; // the pen's centre to settle toward (absent/null if no pen)
+  water?: Attractor | null;  // nearest/only water attractor, if any; read by drink leaf
+  shade?: Attractor | null;  // nearest/only shade attractor, if any; read by rest leaf
 }
 
 // A node WRITES its resulting steering force into `out` (overwrites, not adds)

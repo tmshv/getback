@@ -4,6 +4,7 @@ import type { Obstacle } from "../entities/Obstacle.js";
 import type { StressSource } from "../scare/StressSource.js";
 import type { SteerContext } from "../steering/types.js";
 import type { Pen } from "../world/Pen.js";
+import type { Attractor } from "../entities/Attractor.js";
 
 // World refs the steering trees read each frame (grows as more behaviors land).
 export interface SteerEnv {
@@ -11,6 +12,8 @@ export interface SteerEnv {
   obstacles: readonly Obstacle[];
   stress: readonly StressSource[];
   pen?: Pen | null;
+  water?: Attractor | null;
+  shade?: Attractor | null;
 }
 
 export function steeringSystem(sheep: Sheep[], env: SteerEnv, dt: number): void {
@@ -24,6 +27,8 @@ export function steeringSystem(sheep: Sheep[], env: SteerEnv, dt: number): void 
       dt,
       penned: s.penned,
       penCentroid: env.pen ? env.pen.centroid : null,
+      water: env.water ?? null,
+      shade: env.shade ?? null,
     };
     s.root.run(s, ctx, s.force);
   }
