@@ -13,6 +13,8 @@ export function dogControlSystem(dog: Dog, intent: DogIntent): void {
     dog.force.y = -dog.vel.y * config.dog.stopGain;
     return;
   }
+  // "moving" is already guaranteed here by the stop-branch early return above, so
+  // this predicate matches StaminaSystem's `intent.sprint && moving && stamina>0`.
   const sprinting = intent.sprint && dog.stamina > 0;
   const speed = dog.maxSpeed * (sprinting ? config.dog.sprintMult : 1);
   dog.force.x = (dir.x / mag) * speed - dog.vel.x;
