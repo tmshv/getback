@@ -14,6 +14,7 @@ import { scareSystem } from "../systems/ScareSystem.js";
 import { fearSystem } from "../systems/FearSystem.js";
 import { staminaSystem } from "../systems/StaminaSystem.js";
 import { respawnSystem } from "../systems/RespawnSystem.js";
+import { spawnSystem } from "../systems/SpawnSystem.js";
 
 // Frozen so the shared default can never be mutated by a future consumer.
 const NEUTRAL_INTENT: DogIntent = Object.freeze({
@@ -51,5 +52,6 @@ export class Game {
       penSystem(pen, sheep);
     }
     respawnSystem(this.world);
+    spawnSystem(this.world, step);
   }
 }

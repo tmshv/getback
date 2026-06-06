@@ -38,7 +38,7 @@ export const config = {
   },
   spawn: {
     flockSize: 18,
-    period: 0,
+    period: Infinity,   // sentinel: periodic auto-emit disabled; RespawnSystem uses emitNow()
     areaInset: 30,
     poolInitialSize: 0,
     maxTries: 32,

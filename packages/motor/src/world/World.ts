@@ -12,8 +12,9 @@ import type { Rng } from "@getback/math";
 import { makeRng } from "@getback/math";
 import type { GameSignals } from "./signals.js";
 import { createSignals } from "./signals.js";
-import type { AgentPool } from "./Pool.js";
-import type { Emitter } from "./Emitter.js";
+import { AgentPool } from "./Pool.js";
+import { Emitter, rectGeometry } from "./Emitter.js";
+import { createSheep, defaultSheepTraits, resetSheep } from "../entities/Sheep.js";
 
 export interface Rect {
   x: number;
@@ -74,4 +75,25 @@ export function createWorld(
     sheepPool: null,
     sheepEmitter: null,
   };
+}
+
+/** Build the sheep AgentPool with the standard create/reset pair. */
+export function createSheepPool(): AgentPool<import("../entities/Sheep.js").Sheep> {
+  return new AgentPool({
+    create: () => createSheep({ x: 0, y: 0 }, defaultSheepTraits()),
+    reset: (s) => resetSheep(s, { x: 0, y: 0 }),
+  });
+}
+
+/** Build the sheep Emitter pointed at the full pasture inset. */
+export function createSheepEmitter(rng: import("@getback/math").Rng): Emitter {
+  const b = config.bounds;
+  const i = config.spawn.areaInset;
+  return new Emitter({
+    geometry: rectGeometry({ x: b.x + i, y: b.y + i, w: b.w - i * 2, h: b.h - i * 2 }),
+    period: config.spawn.period,
+    amount: config.spawn.flockSize,
+    max: config.spawn.flockSize,
+    rng,
+  });
 }
