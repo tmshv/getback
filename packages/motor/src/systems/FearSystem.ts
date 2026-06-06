@@ -4,7 +4,7 @@ import { config } from "../config.js";
 
 // Each sheep's fear is the strongest in-range stress (intensity x proximity) or
 // the previous fear shed by `decay` this frame, whichever is higher. So fear
-// spikes on a bark and lingers/decays after the source is gone. Clamped >= 0.
+// spikes on a bark and lingers/decays after the source is gone. Clamped to [0,1].
 export function fearSystem(sheep: Sheep[], stress: readonly StressSource[], dt: number): void {
   const decay = config.fear.decay;
   for (const s of sheep) {
@@ -20,6 +20,7 @@ export function fearSystem(sheep: Sheep[], stress: readonly StressSource[], dt: 
     }
     let decayed = s.drives.fear - decay * dt;
     if (decayed < 0) decayed = 0;
-    s.drives.fear = target > decayed ? target : decayed;
+    const next = target > decayed ? target : decayed;
+    s.drives.fear = next > 1 ? 1 : next; // clamp to [0,1] (forward-proof vs intensity > 1)
   }
 }
