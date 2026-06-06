@@ -11,3 +11,4 @@ export type { EntityKind, AnimState } from "./atlas/frames.js";
 export * from "./config.js";
 export type { HudOverride } from "./render/Hud.js";
 export { intentFromKeys, createEdgeTrigger, attachKeyboard } from "./input/keyboard.js";
+export { runScenario } from "./runScenario.js";
