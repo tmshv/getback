@@ -11,14 +11,17 @@ const BUFF_KINDS: readonly BuffKind[] = ["zoomies", "megabark", "calm"];
 // Scan active treats; consume any that the dog overlaps.
 // Always refills stamina to max. With probability `buffChance` also grants a
 // random buff (via BuffSystem.grantBuff). Emits `signals.treatCollected` with
-// the treat position. Released treats go back to the pool.
+// the treat position. Released treats go back to the pool. Returns the number of
+// treats consumed so the caller can keep the treat Emitter's `active` cap in
+// sync (every consumed treat was counted in `active` when it spawned).
 export function pickupSystem(
   dog: Dog,
   active: Treat[],
   pool: AgentPool<Treat>,
   signals: GameSignals,
   rng?: Rng,
-): void {
+): number {
+  let consumed = 0;
   for (let i = active.length - 1; i >= 0; i--) {
     const treat = active[i]!;
     const dx = dog.pos.x - treat.pos.x;
@@ -29,6 +32,7 @@ export function pickupSystem(
     // Consume
     active.splice(i, 1);
     pool.release(treat);
+    consumed++;
 
     // Refill stamina
     dog.stamina = config.stamina.max;
@@ -42,4 +46,5 @@ export function pickupSystem(
     // Signal FX/HUD
     signals.treatCollected.emit({ x: treat.pos.x, y: treat.pos.y });
   }
+  return consumed;
 }

@@ -64,7 +64,11 @@ export class Game {
     }
     respawnSystem(this.world);
     spawnSystem(this.world, step);
-    if (dog) pickupSystem(dog, treats, treatPool, signals, this.world.rng);
+    if (dog) {
+      const eaten = pickupSystem(dog, treats, treatPool, signals, this.world.rng);
+      // Keep the emitter's active cap in sync: eaten treats free up slots.
+      treatEmitter.active = Math.max(0, treatEmitter.active - eaten);
+    }
 
     // Drip-spawn treats using Plan 14's Emitter API: update(dt) returns Vec2[].
     // The treat emitter's geometry (rectGeometry over the pasture) determines

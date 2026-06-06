@@ -29,16 +29,24 @@ describe("pickupSystem", () => {
     expect(dog.stamina).toBe(0);
   });
 
-  it("overlap — treat is removed, stamina refills to max", () => {
+  it("overlap — treat is removed, stamina refills to max, returns consumed count", () => {
     const dog = createDog({ x: 0, y: 0 });
     dog.stamina = 10;
     const treat = createTreat({ x: 0, y: 0 }); // on top of dog
     const active: Treat[] = [treat];
     const pool = makeTreatPool();
     const signals = createSignals();
-    pickupSystem(dog, active, pool, signals);
+    const consumed = pickupSystem(dog, active, pool, signals);
     expect(active.length).toBe(0);
     expect(dog.stamina).toBe(config.stamina.max);
+    expect(consumed).toBe(1); // caller uses this to free up the emitter's active cap
+  });
+
+  it("returns 0 when nothing is consumed", () => {
+    const dog = createDog({ x: 0, y: 0 });
+    const treat = createTreat({ x: 200, y: 200 }); // far away
+    const consumed = pickupSystem(dog, [treat], makeTreatPool(), createSignals());
+    expect(consumed).toBe(0);
   });
 
   it("overlap — stamina never exceeds max even when already full", () => {
