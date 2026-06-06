@@ -220,6 +220,23 @@ describe("bark & flee integration", () => {
   });
 });
 
+describe("fear integration", () => {
+  it("a bark spikes nearby sheep fear, which then decays once the dog stops barking", () => {
+    const dog = createDog({ x: 150, y: 150 });
+    const sheep = [createSheep({ x: 175, y: 150 }, defaultSheepTraits())]; // within bark radius (70)
+    const game = new Game(createWorld(sheep, undefined, [], null, dog));
+
+    for (let i = 0; i < 10; i++) game.update(1 / 60, { moveDir: { x: 0, y: 0 }, sprint: false, bark: true });
+    const scared = sheep[0]!.drives.fear;
+    expect(scared).toBeGreaterThan(0.3);
+
+    dog.pos.x = 1000;
+    dog.pos.y = 1000;
+    for (let i = 0; i < 120; i++) game.update(1 / 60, { moveDir: { x: 0, y: 0 }, sprint: false, bark: false });
+    expect(sheep[0]!.drives.fear).toBeLessThan(scared * 0.5);
+  });
+});
+
 describe("stamina integration", () => {
   it("holding sprint+bark depletes stamina, then it regenerates when idle", () => {
     const dog = createDog({ x: 150, y: 150 });

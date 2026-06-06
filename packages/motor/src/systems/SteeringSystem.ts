@@ -13,7 +13,7 @@ export interface SteerEnv {
 
 export function steeringSystem(sheep: Sheep[], env: SteerEnv, dt: number): void {
   for (const s of sheep) {
-    const ctx: SteerContext = { neighbors: s.neighbors, grass: env.grass, obstacles: env.obstacles, stress: env.stress, dt };
+    const ctx: SteerContext = { neighbors: s.neighbors, grass: env.grass, obstacles: env.obstacles, stress: env.stress, fear: s.drives.fear, dt };
     s.root.run(s, ctx, s.force);
   }
 }

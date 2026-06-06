@@ -11,6 +11,7 @@ import { fenceCollisionSystem } from "../systems/FenceCollisionSystem.js";
 import type { DogIntent } from "../types.js";
 import { dogControlSystem } from "../systems/DogControlSystem.js";
 import { scareSystem } from "../systems/ScareSystem.js";
+import { fearSystem } from "../systems/FearSystem.js";
 import { staminaSystem } from "../systems/StaminaSystem.js";
 
 // Frozen so the shared default can never be mutated by a future consumer.
@@ -31,6 +32,7 @@ export class Game {
     driveSystem(sheep, grass, step);
     neighborhoodSystem(sheep, grid);
     scareSystem(stress, dog, intent, step);
+    fearSystem(sheep, stress, step);
     steeringSystem(sheep, { grass, obstacles, stress }, step);
     if (dog) dogControlSystem(dog, intent);
     if (dog) staminaSystem(dog, intent, step);
