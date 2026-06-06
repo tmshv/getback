@@ -14,9 +14,7 @@ export const config = {
   },
   grass: { cellSize: 16, regrowRate: 0.03, depleteRate: 0.4, initial: 1 },
   drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.03, drinkRate: 0.6 },
-  graze: { weight: 1.0 },
-  drink: { weight: 1.4 },  // higher than graze: thirst is more urgent
-  rest:  { weight: 0.5 },  // lower than graze: shade is only the idle default
+  graze: { weight: 1.0 }, // the goal sub-selector occupies this one blend slot (drink/graze/rest are mutually exclusive)
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
   pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24, settleRadius: 30, settleWeight: 0.6 },
   respawn: { scatterMargin: 20, scatterTries: 20 }, // fresh-flock placement when a pen fills

@@ -259,4 +259,10 @@ describe("hungerIsTop", () => {
     const s = sheepAgent({ hunger: 0.1, thirst: 0.9, fear: 0 });
     expect(hungerIsTop(s, { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 })).toBe(false);
   });
+  it("wins an exact tie (hunger === thirst) so the sheep grazes rather than idles", () => {
+    const s = sheepAgent({ hunger: 0.5, thirst: 0.5, fear: 0 });
+    const ctx = { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 };
+    expect(thirstIsTop(s, ctx)).toBe(false);
+    expect(hungerIsTop(s, ctx)).toBe(true);
+  });
 });

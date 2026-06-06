@@ -244,9 +244,11 @@ export const thirstIsTop: Predicate = (e, _ctx) => {
   return s.drives.thirst > s.drives.hunger;
 };
 
-// True when hunger is the strictly dominant drive (thirst <= hunger).
+// True when hunger is at least as strong as thirst. `>=` so an exact tie (incl.
+// both 0) resolves to graze — eat rather than idle at shade — and never leaves a
+// hungry sheep stuck in `rest` when thirst happens to equal hunger.
 export const hungerIsTop: Predicate = (e, _ctx) => {
   const s = e as { drives?: { hunger: number; thirst: number } };
   if (!s.drives) return false;
-  return s.drives.hunger > s.drives.thirst;
+  return s.drives.hunger >= s.drives.thirst;
 };
