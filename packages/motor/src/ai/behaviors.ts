@@ -1,6 +1,6 @@
 import type { Mobile } from "../types.js";
-import type { BehaviorNode } from "../steering/types.js";
-import { seek } from "../steering/primitives.js";
+import type { BehaviorNode, Predicate } from "../steering/types.js";
+import { seek, arrive } from "../steering/primitives.js";
 import { gradientAt } from "../grass/GrassField.js";
 
 // All three return a Reynolds steering force (desiredVelocity - velocity) so
@@ -178,3 +178,24 @@ export function fleeStress(): BehaviorNode {
     },
   };
 }
+
+// Calmly converge on the pen centre once penned: arrive (speed ramps to 0 near
+// the centroid) so penned sheep mill near the middle instead of pressing the
+// gate. Skips (zero force) when there is no pen centroid to seek.
+export function penInterior(slowRadius: number): BehaviorNode {
+  return {
+    run(e, ctx, out) {
+      const c = ctx.penCentroid;
+      if (!c) {
+        out.x = 0;
+        out.y = 0;
+        return "skipped";
+      }
+      arrive(e, c, slowRadius, out);
+      return "fired";
+    },
+  };
+}
+
+// True while the steering sheep is inside the pen.
+export const isPenned: Predicate = (_e, ctx) => ctx.penned === true;

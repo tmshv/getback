@@ -14,6 +14,8 @@ export interface SteerContext {
   stress: readonly StressSource[];
   fear: number; // the steering sheep's own fear drive [0..1]
   dt: number;
+  penned?: boolean; // true while this sheep is inside the pen (settle, don't graze out)
+  penCentroid?: Vec2 | null; // the pen's centre to settle toward (absent/null if no pen)
 }
 
 // A node WRITES its resulting steering force into `out` (overwrites, not adds)

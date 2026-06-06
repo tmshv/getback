@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fenceCollisionSystem } from "./FenceCollisionSystem.js";
+import { fenceCollisionSystem, dogPenCollisionSystem } from "./FenceCollisionSystem.js";
 import { buildPen, penContains } from "../world/Pen.js";
 import type { Mobile } from "../types.js";
 
@@ -70,5 +70,30 @@ describe("fenceCollisionSystem", () => {
     expect(penContains(pen, u.pos)).toBe(true); // did not escape through the corner
     expect(u.pos.x).toBeLessThan(40);
     expect(u.pos.y).toBeGreaterThan(0);
+  });
+});
+
+describe("dogPenCollisionSystem", () => {
+  it("lets the dog pass FREELY through the gate (exempt from the one-way gate)", () => {
+    const pen = buildPen(square, 3); // gate = left edge (x=0)
+    // an inward crossing of the gate: the sheep one-way logic would allow this,
+    // and for the dog there is no gate test at all, so it passes straight through.
+    const dog = unit({ prevPos: { x: -3, y: 20 }, pos: { x: 5, y: 20 }, vel: { x: 8, y: 0 } });
+    dogPenCollisionSystem(pen, dog);
+    expect(dog.pos.x).toBeCloseTo(5); // unmoved — the gate is an opening for the dog
+    expect(penContains(pen, dog.pos)).toBe(true); // it entered
+
+    // ...and OUTWARD through the gate is also free for the dog (unlike sheep).
+    const out = unit({ prevPos: { x: 3, y: 20 }, pos: { x: -5, y: 20 }, vel: { x: -8, y: 0 } });
+    dogPenCollisionSystem(pen, out);
+    expect(out.pos.x).toBeCloseTo(-5); // it left freely
+  });
+
+  it("blocks a dog crossing a solid fence, like a sheep", () => {
+    const pen = buildPen(square, 3);
+    const dog = unit({ prevPos: { x: 20, y: 5 }, pos: { x: 20, y: -3 }, vel: { x: 0, y: -8 } });
+    dogPenCollisionSystem(pen, dog);
+    expect(dog.pos.y).toBeGreaterThan(0);
+    expect(Math.abs(dog.pos.y)).toBeCloseTo(dog.radius);
   });
 });
