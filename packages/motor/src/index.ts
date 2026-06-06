@@ -36,3 +36,6 @@ export type { StressSource, StressKind } from "./scare/StressSource.js";
 export { scareSystem } from "./systems/ScareSystem.js";
 export { fearSystem } from "./systems/FearSystem.js";
 export { staminaSystem } from "./systems/StaminaSystem.js";
+export type { GameSignals } from "./world/signals.js";
+export { createSignals } from "./world/signals.js";
+export { respawnSystem } from "./systems/RespawnSystem.js";

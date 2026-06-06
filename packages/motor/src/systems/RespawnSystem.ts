@@ -32,8 +32,8 @@ export function respawnSystem(world: World): void {
   const newPen = buildPen(shape.outline, shape.gateEdge);
   world.pen = newPen;
 
-  // refill the flock, scattered outside the new pen
-  flock.length = 0;
+  // refill with a brand-new flock, scattered outside the new pen
+  const fresh: typeof flock = [];
   const margin = 20;
   for (let i = 0; i < count; i++) {
     let x = b.x + b.w / 2;
@@ -43,6 +43,7 @@ export function respawnSystem(world: World): void {
       y = rng.range(b.y + margin, b.y + b.h - margin);
       if (!penContains(newPen, { x, y })) break;
     }
-    flock.push(createSheep({ x, y }, defaultSheepTraits()));
+    fresh.push(createSheep({ x, y }, defaultSheepTraits()));
   }
+  world.sheep = fresh;
 }
