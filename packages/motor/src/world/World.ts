@@ -12,6 +12,8 @@ import type { Rng } from "@getback/math";
 import { makeRng } from "@getback/math";
 import type { GameSignals } from "./signals.js";
 import { createSignals } from "./signals.js";
+import type { AgentPool } from "./Pool.js";
+import type { Emitter } from "./Emitter.js";
 
 export interface Rect {
   x: number;
@@ -32,6 +34,8 @@ export interface World {
   grid: UniformGrid<Sheep>;
   rng: Rng;
   signals: GameSignals;
+  sheepPool: AgentPool<Sheep> | null;
+  sheepEmitter: Emitter | null;
 }
 
 function defaultGrass(): GrassField {
@@ -67,5 +71,7 @@ export function createWorld(
     grid: new UniformGrid<Sheep>(config.flock.perception),
     rng,
     signals: createSignals(),
+    sheepPool: null,
+    sheepEmitter: null,
   };
 }
