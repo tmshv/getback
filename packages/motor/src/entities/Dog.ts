@@ -4,7 +4,7 @@ import { config } from "../config.js";
 
 // The player's corgi. For now just a Mobile with dog tuning; stamina/buffs land
 // in a later slice.
-export interface Dog extends Mobile { barkCooldown: number; }
+export interface Dog extends Mobile { barkCooldown: number; stamina: number; }
 
 export function createDog(pos: Vec2): Dog {
   return {
@@ -17,5 +17,6 @@ export function createDog(pos: Vec2): Dog {
     maxForce: config.dog.maxForce,
     facing: "down",
     barkCooldown: 0,
+    stamina: config.stamina.max,
   };
 }

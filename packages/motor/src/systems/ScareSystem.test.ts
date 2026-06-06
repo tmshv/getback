@@ -43,3 +43,20 @@ describe("scareSystem", () => {
     expect(stress.length).toBe(0);
   });
 });
+
+describe("scareSystem stamina gate", () => {
+  it("spends stamina on a bark", () => {
+    const stress: StressSource[] = [];
+    const dog = createDog({ x: 0, y: 0 });
+    scareSystem(stress, dog, intent({ bark: true }), 1 / 60);
+    expect(dog.stamina).toBeCloseTo(config.stamina.max - config.stamina.barkCost);
+  });
+  it("will not bark when stamina is below the bark cost", () => {
+    const stress: StressSource[] = [];
+    const dog = createDog({ x: 0, y: 0 });
+    dog.stamina = config.stamina.barkCost - 1;
+    scareSystem(stress, dog, intent({ bark: true }), 1 / 60);
+    expect(stress.some((s) => s.kind === "bark")).toBe(false);
+    expect(dog.stamina).toBe(config.stamina.barkCost - 1);
+  });
+});

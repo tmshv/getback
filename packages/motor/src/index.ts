@@ -34,3 +34,4 @@ export { penSystem } from "./systems/PenSystem.js";
 export { fenceCollisionSystem } from "./systems/FenceCollisionSystem.js";
 export type { StressSource, StressKind } from "./scare/StressSource.js";
 export { scareSystem } from "./systems/ScareSystem.js";
+export { staminaSystem } from "./systems/StaminaSystem.js";

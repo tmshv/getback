@@ -11,6 +11,7 @@ import { fenceCollisionSystem } from "../systems/FenceCollisionSystem.js";
 import type { DogIntent } from "../types.js";
 import { dogControlSystem } from "../systems/DogControlSystem.js";
 import { scareSystem } from "../systems/ScareSystem.js";
+import { staminaSystem } from "../systems/StaminaSystem.js";
 
 // Frozen so the shared default can never be mutated by a future consumer.
 const NEUTRAL_INTENT: DogIntent = Object.freeze({
@@ -32,6 +33,7 @@ export class Game {
     scareSystem(stress, dog, intent, step);
     steeringSystem(sheep, { grass, obstacles, stress }, step);
     if (dog) dogControlSystem(dog, intent);
+    if (dog) staminaSystem(dog, intent, step);
     movementSystem(sheep, step);
     if (dog) integrate(dog, step);
     collisionSystem(sheep, obstacles);

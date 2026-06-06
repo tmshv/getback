@@ -11,6 +11,7 @@ describe("createDog", () => {
     expect(d.radius).toBe(config.dog.radius);
     expect(d.maxSpeed).toBe(config.dog.maxSpeed);
     expect(d.maxForce).toBe(config.dog.maxForce);
+    expect(d.stamina).toBe(config.stamina.max);
   });
   it("copies the position and seeds prevPos", () => {
     const pos = { x: 1, y: 2 };

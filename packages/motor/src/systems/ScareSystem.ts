@@ -16,7 +16,7 @@ export function scareSystem(stress: StressSource[], dog: Dog | null, intent: Dog
     intensity: config.scare.presenceIntensity,
   });
   if (dog.barkCooldown > 0) dog.barkCooldown -= dt;
-  if (intent.bark && dog.barkCooldown <= 0) {
+  if (intent.bark && dog.barkCooldown <= 0 && dog.stamina >= config.stamina.barkCost) {
     stress.push({
       kind: "bark",
       pos: { x: dog.pos.x, y: dog.pos.y },
@@ -24,5 +24,6 @@ export function scareSystem(stress: StressSource[], dog: Dog | null, intent: Dog
       intensity: config.scare.barkIntensity,
     });
     dog.barkCooldown = config.scare.barkCooldown;
+    dog.stamina -= config.stamina.barkCost;
   }
 }
