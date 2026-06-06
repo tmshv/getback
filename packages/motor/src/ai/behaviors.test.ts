@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { separation, cohesion, follow, graze, obstacleAvoid, fleeStress } from "./behaviors.js";
+import { separation, cohesion, follow, graze, obstacleAvoid, fleeStress, penInterior, isPenned } from "./behaviors.js";
 import type { Mobile } from "../types.js";
 import type { StressSource } from "../scare/StressSource.js";
 import { createGrassField, setDensityAt } from "../grass/GrassField.js";
@@ -120,5 +120,40 @@ describe("cohesion fear boost", () => {
     cohesion(6).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, calm);
     cohesion(6).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 1, dt: 0 }, scared);
     expect(Math.hypot(scared.x, scared.y)).toBeGreaterThan(Math.hypot(calm.x, calm.y));
+  });
+});
+
+describe("penInterior", () => {
+  it("steers toward the pen centroid when one is provided", () => {
+    const self = agent({ pos: { x: 0, y: 0 } });
+    const out = { x: 0, y: 0 };
+    const status = penInterior(20).run(
+      self,
+      { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0, penCentroid: { x: 100, y: 0 } },
+      out,
+    );
+    expect(status).toBe("fired");
+    expect(out.x).toBeGreaterThan(0); // pulled toward the +x centroid
+  });
+  it("skips with zero force when there is no pen centroid", () => {
+    const self = agent();
+    const out = { x: 1, y: 1 };
+    const status = penInterior(20).run(
+      self,
+      { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 },
+      out,
+    );
+    expect(status).toBe("skipped");
+    expect(out).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe("isPenned", () => {
+  it("is true only when ctx.penned is set true", () => {
+    const self = agent();
+    const base = { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 };
+    expect(isPenned(self, { ...base, penned: true })).toBe(true);
+    expect(isPenned(self, { ...base })).toBe(false);
+    expect(isPenned(self, { ...base, penned: false })).toBe(false);
   });
 });

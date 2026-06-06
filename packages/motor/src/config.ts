@@ -16,7 +16,7 @@ export const config = {
   drives: { hungerRate: 0.05, grazeRate: 0.5 },
   graze: { weight: 1.0 },
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
-  pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24 },
+  pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24, settleRadius: 30, settleWeight: 0.6 },
   respawn: { scatterMargin: 20, scatterTries: 20 }, // fresh-flock placement when a pen fills
   dog: { radius: 6, maxSpeed: 70, maxForce: 400, sprintMult: 1.6, stopGain: 12 },
   scare: { presenceRadius: 26, presenceIntensity: 0.25, barkRadius: 70, barkIntensity: 1, barkCooldown: 0.8 },
