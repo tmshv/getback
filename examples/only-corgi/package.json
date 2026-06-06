@@ -1,0 +1,20 @@
+{
+  "name": "@getback/example-only-corgi",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@getback/game": "*",
+    "@getback/motor": "*",
+    "@getback/math": "*"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vitest": "^2.1.8"
+  }
+}
