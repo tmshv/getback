@@ -1,0 +1,19 @@
+{
+  "name": "@getback/game",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "gen:sprites": "node tools/gen-sprites.mjs",
+    "slice:sheet": "node tools/slice-sheet.mjs"
+  },
+  "dependencies": {
+    "@getback/math": "*",
+    "@getback/motor": "*",
+    "pixi.js": "^8.0.0"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^0.1.44"
+  }
+}
