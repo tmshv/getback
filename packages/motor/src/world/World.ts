@@ -15,6 +15,8 @@ import { createSignals } from "./signals.js";
 import { AgentPool } from "./Pool.js";
 import { Emitter, rectGeometry } from "./Emitter.js";
 import { createSheep, defaultSheepTraits, resetSheep } from "../entities/Sheep.js";
+import type { Treat } from "../entities/Treat.js";
+import { createTreat } from "../entities/Treat.js";
 
 export interface Rect {
   x: number;
@@ -37,6 +39,9 @@ export interface World {
   signals: GameSignals;
   sheepPool: AgentPool<Sheep> | null;
   sheepEmitter: Emitter | null;
+  treats:       Treat[];
+  treatPool:    AgentPool<Treat>;
+  treatEmitter: Emitter;
 }
 
 function defaultGrass(): GrassField {
@@ -74,6 +79,23 @@ export function createWorld(
     signals: createSignals(),
     sheepPool: null,
     sheepEmitter: null,
+    treats:       [],
+    treatPool:    new AgentPool<Treat>({
+      create: () => createTreat({ x: 0, y: 0 }),
+      reset:  () => {},  // position set by Game.ts after acquire
+    }),
+    treatEmitter: new Emitter({
+      geometry: rectGeometry({
+        x: config.bounds.x + 10,
+        y: config.bounds.y + 10,
+        w: config.bounds.w - 20,
+        h: config.bounds.h - 20,
+      }),
+      period: config.treats.periodMin,  // starting period; Game re-uses update(dt)
+      amount: 1,
+      max:    config.treats.max,
+      rng,
+    }),
   };
 }
 

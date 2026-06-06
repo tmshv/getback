@@ -33,3 +33,20 @@ describe("createWorld attractors", () => {
     expect(w.attractors[0]).toBe(water);
   });
 });
+
+describe("createWorld treats and signals", () => {
+  it("world has empty treats array and a treatPool and treatEmitter", () => {
+    const w = createWorld();
+    expect(Array.isArray(w.treats)).toBe(true);
+    expect(w.treats.length).toBe(0);
+    expect(typeof w.treatPool.acquire).toBe("function");
+    expect(typeof w.treatEmitter.update).toBe("function");
+  });
+  it("new signals include sheepPenned, treatCollected, barked, ambientScare", () => {
+    const w = createWorld();
+    expect(typeof w.signals.sheepPenned.add).toBe("function");
+    expect(typeof w.signals.treatCollected.add).toBe("function");
+    expect(typeof w.signals.barked.add).toBe("function");
+    expect(typeof w.signals.ambientScare.add).toBe("function");
+  });
+});
