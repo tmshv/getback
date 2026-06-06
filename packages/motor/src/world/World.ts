@@ -3,6 +3,7 @@ import type { Sheep } from "../entities/Sheep.js";
 import type { GrassField } from "../grass/GrassField.js";
 import { createGrassField } from "../grass/GrassField.js";
 import type { Obstacle } from "../entities/Obstacle.js";
+import type { Attractor } from "../entities/Attractor.js";
 import type { Pen } from "./Pen.js";
 import type { Dog } from "../entities/Dog.js";
 import { config } from "../config.js";
@@ -24,6 +25,7 @@ export interface World {
   bounds: Rect; // reserved: boundary containment / bounds-avoidance steering arrives in a later plan
   grass: GrassField;
   obstacles: Obstacle[];
+  attractors: Attractor[];
   pen: Pen | null;
   dog: Dog | null;
   stress: StressSource[];
@@ -51,12 +53,14 @@ export function createWorld(
   pen: Pen | null = null,
   dog: Dog | null = null,
   rng: Rng = makeRng(1),
+  attractors: Attractor[] = [],
 ): World {
   return {
     sheep,
     bounds: { ...config.bounds },
     grass,
     obstacles,
+    attractors,
     pen,
     dog,
     stress: [],

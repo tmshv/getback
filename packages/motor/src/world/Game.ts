@@ -28,13 +28,17 @@ export class Game {
 
   update(dt: number, intent: DogIntent = NEUTRAL_INTENT): void {
     const step = Math.min(dt, config.dtClampMax);
-    const { sheep, grass, obstacles, pen, grid, dog, stress } = this.world;
+    const { sheep, grass, obstacles, attractors, pen, grid, dog, stress } = this.world;
     grassSystem(grass, sheep, step);
-    driveSystem(sheep, grass, step);
+    driveSystem(sheep, grass, attractors, step);
     neighborhoodSystem(sheep, grid);
     scareSystem(stress, dog, intent, step);
     fearSystem(sheep, stress, step);
-    steeringSystem(sheep, { grass, obstacles, stress, pen }, step);
+    // Resolve the primary water + shade attractors for the steering context
+    // (first of each kind; later plans may use nearest-neighbour lookup).
+    const water = attractors.find((a) => a.kind === "water") ?? null;
+    const shade = attractors.find((a) => a.kind === "shade") ?? null;
+    steeringSystem(sheep, { grass, obstacles, stress, pen, water, shade }, step);
     if (dog) dogControlSystem(dog, intent);
     if (dog) staminaSystem(dog, intent, step);
     movementSystem(sheep, step);

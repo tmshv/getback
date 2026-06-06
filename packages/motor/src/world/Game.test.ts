@@ -10,6 +10,7 @@ import { makeRng } from "@getback/math";
 import { generatePen } from "../world/penGen.js";
 import { buildPen, penContains } from "../world/Pen.js";
 import { config } from "../config.js";
+import { createAttractor, createTree } from "../entities/Attractor.js";
 
 function centroid(sheep: Sheep[]) {
   const c = { x: 0, y: 0 };
@@ -107,6 +108,7 @@ describe("obstacle collision integration", () => {
       for (let cy = 0; cy < rows; cy++) setDensityAt(grass, cx * cs + 8, cy * cs + 8, d);
     }
     const sheep = [createSheep({ x: 120, y: 140 }, defaultSheepTraits())];
+    sheep[0]!.drives.hunger = 1; // hungry so the goal cascade grazes east toward the rock
     const rock = createObstacle("rock", { x: 240, y: 140 }, 14); // directly east, in the path
     const game = new Game(createWorld(sheep, grass, [rock]));
 
@@ -359,5 +361,63 @@ describe("dog vs pen integration", () => {
       expect(penContains(pen, dog.pos)).toBe(false);
     }
     expect(dog.pos.y).toBeLessThan(100); // stopped at the fence
+  });
+});
+
+describe("drive goal cascade integration", () => {
+  it("a thirsty sheep near water moves toward it and thirst falls", () => {
+    // Place water east of the sheep. Sheep starts with full thirst (1.0).
+    const water = createAttractor("water", { x: 300, y: 135 }, 24);
+    const s = createSheep({ x: 100, y: 135 }, defaultSheepTraits());
+    s.drives.thirst = 1.0;
+    s.drives.hunger = 0.0;
+    const world = createWorld([s], undefined, [], null, null, undefined, [water]);
+    const game = new Game(world);
+
+    // Run ~7.5 seconds. The sheep should travel toward x=300 and reach the water.
+    for (let i = 0; i < 450; i++) game.update(1 / 60);
+
+    expect(s.pos.x).toBeGreaterThan(150); // moved toward water
+    // Once inside the water radius thirst should have fallen from the max
+    expect(s.drives.thirst).toBeLessThan(1.0);
+  });
+
+  it("a hungry (not thirsty) sheep follows the grass gradient, not water", () => {
+    const water = createAttractor("water", { x: 300, y: 135 }, 24);
+    // Lush grass to the west (low x); water is to the east (x=300)
+    const grass = createGrassField({ cols: 30, rows: 18, cellSize: 16, regrowRate: 0, depleteRate: 0, initial: 0 });
+    for (let cx = 0; cx < 30; cx++) {
+      const d = 1 - (cx / 29); // 1.0 at west, 0 at east
+      for (let cy = 0; cy < 18; cy++) setDensityAt(grass, cx * 16 + 8, cy * 16 + 8, d);
+    }
+    const s = createSheep({ x: 240, y: 135 }, defaultSheepTraits());
+    s.drives.hunger = 1.0;
+    s.drives.thirst = 0.0;
+    const world = createWorld([s], grass, [], null, null, undefined, [water]);
+    const game = new Game(world);
+
+    for (let i = 0; i < 300; i++) game.update(1 / 60);
+
+    // Hungry sheep should move WEST (toward grass), not east (toward water)
+    expect(s.pos.x).toBeLessThan(240);
+  });
+
+  it("a sheep at a tree rests in shade (createTree integration)", () => {
+    // createTree gives us both a trunk obstacle and a shade attractor.
+    const { obstacle, shade } = createTree({ x: 240, y: 135 });
+    const s = createSheep({ x: 100, y: 135 }, defaultSheepTraits());
+    s.drives.hunger = 0.0;
+    s.drives.thirst = 0.0;
+    const world = createWorld([s], undefined, [obstacle], null, null, undefined, [shade]);
+    const game = new Game(world);
+
+    for (let i = 0; i < 300; i++) game.update(1 / 60);
+
+    // Sheep should have moved toward the shade (x=240, within shadeRadius=28)
+    expect(s.pos.x).toBeGreaterThan(150);
+    // Must NOT have entered the solid trunk (obstacle.radius=7, centred at x=240)
+    const dx = s.pos.x - obstacle.pos.x;
+    const dy = s.pos.y - obstacle.pos.y;
+    expect(Math.hypot(dx, dy)).toBeGreaterThan(obstacle.radius + s.radius - 1);
   });
 });

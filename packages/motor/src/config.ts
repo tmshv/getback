@@ -13,8 +13,8 @@ export const config = {
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
   },
   grass: { cellSize: 16, regrowRate: 0.03, depleteRate: 0.4, initial: 1 },
-  drives: { hungerRate: 0.05, grazeRate: 0.5 },
-  graze: { weight: 1.0 },
+  drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.03, drinkRate: 0.6 },
+  graze: { weight: 1.0 }, // the goal sub-selector occupies this one blend slot (drink/graze/rest are mutually exclusive)
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
   pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24, settleRadius: 30, settleWeight: 0.6 },
   respawn: { scatterMargin: 20, scatterTries: 20 }, // fresh-flock placement when a pen fills
@@ -24,4 +24,16 @@ export const config = {
   flee: { weight: 2.5 },
   fear: { decay: 1.2 }, // fear units shed per second when no stress is near
   bounds: { x: 0, y: 0, w: 480, h: 270 },
+  attractor: {
+    trunkRadius: 7,      // solid tree trunk
+    shadeRadius: 28,     // restful shade canopy, larger than trunk
+    waterRadius: 22,     // default water hole radius
+  },
+  traits: {
+    maxSpeedJitter: 0.2,   // ±20% of flock.maxSpeed
+    boldnessMin: 0.3,
+    boldnessMax: 0.9,
+    sociabilityMin: 0.4,
+    sociabilityMax: 1.0,
+  },
 } as const;
