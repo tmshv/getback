@@ -21,5 +21,6 @@ export const config = {
   scare: { presenceRadius: 26, presenceIntensity: 0.25, barkRadius: 70, barkIntensity: 1, barkCooldown: 0.8 },
   stamina: { max: 100, sprintDrain: 18, regen: 22, barkCost: 12 },
   flee: { weight: 2.5 },
+  fear: { decay: 1.2 }, // fear units shed per second when no stress is near
   bounds: { x: 0, y: 0, w: 480, h: 270 },
 } as const;

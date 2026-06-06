@@ -14,7 +14,7 @@ export interface SheepTraits {
 
 export interface Sheep extends Mobile {
   traits: SheepTraits;
-  drives: { hunger: number }; // [0..1]; grows in later plans (thirst, fear)
+  drives: { hunger: number; fear: number }; // [0..1]; grows in later plans (thirst)
   penned: boolean;
   neighbors: Sheep[]; // refilled each frame by NeighborhoodSystem
   root: BehaviorNode;
@@ -41,7 +41,7 @@ export function createSheep(pos: Vec2, traits: SheepTraits): Sheep {
     maxForce: traits.maxForce,
     facing: "down",
     traits,
-    drives: { hunger: 0 },
+    drives: { hunger: 0, fear: 0 },
     penned: false,
     neighbors: [],
     root: buildSheepTree(traits),
