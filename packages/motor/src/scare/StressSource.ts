@@ -1,6 +1,6 @@
 import type { Vec2 } from "@getback/math";
 
-export type StressKind = "presence" | "bark";
+export type StressKind = "presence" | "bark" | "ambient";
 
 // A circular scare field. `flee` repels sheep within `radius`, scaled by
 // `intensity` and proximity.

@@ -43,4 +43,22 @@ export const config = {
     poolInitialSize: 0,
     maxTries: 32,
   },
+  treats: {
+    periodMin: 12,
+    periodMax: 20,
+    max: 3,
+    buffChance: 0.5,
+    radius: 4,
+  },
+  buffs: {
+    zoomies:  { duration: 4,   mult: 1.8 },
+    megabark: { duration: 6,   radiusMult: 1.7, ttlMult: 1.5 },
+    calm:     { duration: 6,   fearMult: 0.4 },
+  },
+  ambient: {
+    intervalMin: 18,
+    intervalMax: 35,
+    intensity: 0.8,
+    radius: 9999, // effectively covers the whole 480×270 pasture
+  },
 } as const;
