@@ -199,3 +199,54 @@ export function penInterior(slowRadius: number): BehaviorNode {
 
 // True while the steering sheep is inside the pen.
 export const isPenned: Predicate = (_e, ctx) => ctx.penned === true;
+
+// Arrive at the water attractor. Skips (zero force) when ctx.water is absent
+// (no water hole on the map). Weight in the tree scales with thirst config.
+export function drink(slowRadius: number): BehaviorNode {
+  return {
+    run(e, ctx, out) {
+      const w = ctx.water;
+      if (!w) {
+        out.x = 0;
+        out.y = 0;
+        return "skipped";
+      }
+      arrive(e, w.pos, slowRadius, out);
+      return "fired";
+    },
+  };
+}
+
+// Arrive at the shade attractor (low-weight idle default). Skips when no shade
+// is available. Weight in the tree is lower than graze/drink.
+export function rest(slowRadius: number): BehaviorNode {
+  return {
+    run(e, ctx, out) {
+      const s = ctx.shade;
+      if (!s) {
+        out.x = 0;
+        out.y = 0;
+        return "skipped";
+      }
+      arrive(e, s.pos, slowRadius, out);
+      return "fired";
+    },
+  };
+}
+
+// True when thirst is the strictly dominant drive (beats hunger).
+// Sheep reads ctx.self implicitly via the `e` argument — but drives live on
+// the Sheep entity, which is a Mobile with an extra `drives` property.
+// We cast: Sheep always has drives; the tree is only used on sheep.
+export const thirstIsTop: Predicate = (e, _ctx) => {
+  const s = e as { drives?: { hunger: number; thirst: number } };
+  if (!s.drives) return false;
+  return s.drives.thirst > s.drives.hunger;
+};
+
+// True when hunger is the strictly dominant drive (thirst <= hunger).
+export const hungerIsTop: Predicate = (e, _ctx) => {
+  const s = e as { drives?: { hunger: number; thirst: number } };
+  if (!s.drives) return false;
+  return s.drives.hunger > s.drives.thirst;
+};

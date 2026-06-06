@@ -9,7 +9,7 @@ export type { Status, SteerContext, BehaviorNode, Predicate } from "./steering/t
 export { blend } from "./steering/Behavior.js";
 export { selector, conditional } from "./steering/combinators.js";
 export type { WeightedChild } from "./steering/Behavior.js";
-export { separation, cohesion, follow, graze, obstacleAvoid, fleeStress, penInterior, isPenned } from "./ai/behaviors.js";
+export { separation, cohesion, follow, graze, obstacleAvoid, fleeStress, penInterior, isPenned, drink, rest, thirstIsTop, hungerIsTop } from "./ai/behaviors.js";
 export { buildSheepTree } from "./ai/trees.js";
 export type { Sheep, SheepTraits } from "./entities/Sheep.js";
 export { createSheep, defaultSheepTraits, rollSheepTraits } from "./entities/Sheep.js";

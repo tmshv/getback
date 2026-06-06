@@ -4,6 +4,10 @@ import type { Mobile } from "../types.js";
 import type { StressSource } from "../scare/StressSource.js";
 import { createGrassField, setDensityAt } from "../grass/GrassField.js";
 import { createObstacle } from "../entities/Obstacle.js";
+import { drink, rest, thirstIsTop, hungerIsTop } from "./behaviors.js";
+import type { Sheep } from "../entities/Sheep.js";
+import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
+import { createAttractor } from "../entities/Attractor.js";
 
 function agent(over: Partial<Mobile> = {}): Mobile {
   return {
@@ -155,5 +159,104 @@ describe("isPenned", () => {
     expect(isPenned(self, { ...base, penned: true })).toBe(true);
     expect(isPenned(self, { ...base })).toBe(false);
     expect(isPenned(self, { ...base, penned: false })).toBe(false);
+  });
+});
+
+function sheepAgent(drives: { hunger: number; thirst: number; fear: number }): Sheep {
+  const s = createSheep({ x: 0, y: 0 }, defaultSheepTraits());
+  s.drives = drives;
+  return s;
+}
+
+describe("drink", () => {
+  it("steers toward the water attractor when ctx.water is set", () => {
+    const s = sheepAgent({ hunger: 0.3, thirst: 0.8, fear: 0 });
+    const water = createAttractor("water", { x: 100, y: 0 }, 24);
+    const out = { x: 0, y: 0 };
+    const status = drink(24).run(
+      s,
+      { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0, water },
+      out,
+    );
+    expect(status).toBe("fired");
+    expect(out.x).toBeGreaterThan(0); // steers toward +x water
+  });
+
+  it("skips with zero force when ctx.water is absent", () => {
+    const s = sheepAgent({ hunger: 0, thirst: 1, fear: 0 });
+    const out = { x: 1, y: 1 };
+    const status = drink(24).run(
+      s,
+      { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 },
+      out,
+    );
+    expect(status).toBe("skipped");
+    expect(out).toEqual({ x: 0, y: 0 });
+  });
+
+  it("produces zero force when already at the water centre", () => {
+    const s = sheepAgent({ hunger: 0, thirst: 1, fear: 0 });
+    const water = createAttractor("water", { x: 0, y: 0 }, 24);
+    const out = { x: 99, y: 99 };
+    drink(24).run(
+      s,
+      { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0, water },
+      out,
+    );
+    // `arrive` at distance 0 returns -vel (which is 0 for a stationary sheep)
+    expect(Math.hypot(out.x, out.y)).toBeCloseTo(0);
+  });
+});
+
+describe("rest", () => {
+  it("steers toward the shade attractor when ctx.shade is set", () => {
+    const s = sheepAgent({ hunger: 0.3, thirst: 0.1, fear: 0 });
+    const shade = createAttractor("shade", { x: 0, y: 80 }, 28);
+    const out = { x: 0, y: 0 };
+    const status = rest(28).run(
+      s,
+      { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0, shade },
+      out,
+    );
+    expect(status).toBe("fired");
+    expect(out.y).toBeGreaterThan(0); // steers toward +y shade
+  });
+
+  it("skips with zero force when ctx.shade is absent", () => {
+    const s = sheepAgent({ hunger: 0, thirst: 0, fear: 0 });
+    const out = { x: 1, y: 1 };
+    const status = rest(28).run(
+      s,
+      { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 },
+      out,
+    );
+    expect(status).toBe("skipped");
+    expect(out).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe("thirstIsTop", () => {
+  it("is true when thirst > hunger", () => {
+    const s = sheepAgent({ hunger: 0.3, thirst: 0.8, fear: 0 });
+    expect(thirstIsTop(s, { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 })).toBe(true);
+  });
+  it("is false when hunger >= thirst", () => {
+    const s = sheepAgent({ hunger: 0.8, thirst: 0.3, fear: 0 });
+    expect(thirstIsTop(s, { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 })).toBe(false);
+  });
+  it("is false when drives are equal (hunger wins the tie)", () => {
+    const s = sheepAgent({ hunger: 0.5, thirst: 0.5, fear: 0 });
+    expect(thirstIsTop(s, { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 })).toBe(false);
+  });
+});
+
+describe("hungerIsTop", () => {
+  it("is true when hunger > thirst", () => {
+    const s = sheepAgent({ hunger: 0.9, thirst: 0.1, fear: 0 });
+    expect(hungerIsTop(s, { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 })).toBe(true);
+  });
+  it("is false when thirst > hunger", () => {
+    const s = sheepAgent({ hunger: 0.1, thirst: 0.9, fear: 0 });
+    expect(hungerIsTop(s, { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 })).toBe(false);
   });
 });
