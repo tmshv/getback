@@ -30,7 +30,7 @@ export class Game {
     const step = Math.min(dt, config.dtClampMax);
     const { sheep, grass, obstacles, pen, grid, dog, stress } = this.world;
     grassSystem(grass, sheep, step);
-    driveSystem(sheep, grass, step);
+    driveSystem(sheep, grass, [], step);
     neighborhoodSystem(sheep, grid);
     scareSystem(stress, dog, intent, step);
     fearSystem(sheep, stress, step);

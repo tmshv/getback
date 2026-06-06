@@ -13,7 +13,7 @@ export const config = {
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
   },
   grass: { cellSize: 16, regrowRate: 0.03, depleteRate: 0.4, initial: 1 },
-  drives: { hungerRate: 0.05, grazeRate: 0.5 },
+  drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.03, drinkRate: 0.6 },
   graze: { weight: 1.0 },
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
   pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24, settleRadius: 30, settleWeight: 0.6 },
