@@ -49,6 +49,23 @@ export function rollSheepTraits(rng: Rng): SheepTraits {
   };
 }
 
+// Reset a recycled sheep in-place to a new spawn position.
+// Used by the pool factory so existing object references stay valid.
+export function resetSheep(sheep: Sheep, pos: Vec2): void {
+  sheep.pos.x = pos.x;
+  sheep.pos.y = pos.y;
+  sheep.prevPos = { x: pos.x, y: pos.y };
+  sheep.vel.x = 0;
+  sheep.vel.y = 0;
+  sheep.force.x = 0;
+  sheep.force.y = 0;
+  sheep.penned = false;
+  sheep.drives.fear = 0;
+  sheep.drives.hunger = 0;
+  sheep.drives.thirst = 0;
+  sheep.neighbors.length = 0;
+}
+
 export function createSheep(pos: Vec2, traits: SheepTraits): Sheep {
   return {
     pos: { x: pos.x, y: pos.y },
