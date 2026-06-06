@@ -13,7 +13,8 @@ export function dogControlSystem(dog: Dog, intent: DogIntent): void {
     dog.force.y = -dog.vel.y * config.dog.stopGain;
     return;
   }
-  const speed = dog.maxSpeed * (intent.sprint ? config.dog.sprintMult : 1);
+  const sprinting = intent.sprint && dog.stamina > 0;
+  const speed = dog.maxSpeed * (sprinting ? config.dog.sprintMult : 1);
   dog.force.x = (dir.x / mag) * speed - dog.vel.x;
   dog.force.y = (dir.y / mag) * speed - dog.vel.y;
 }

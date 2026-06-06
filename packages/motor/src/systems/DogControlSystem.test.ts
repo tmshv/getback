@@ -31,4 +31,10 @@ describe("dogControlSystem", () => {
     expect(d.force.x).toBeCloseTo(-10 * config.dog.stopGain);
     expect(d.force.y).toBeCloseTo(0);
   });
+  it("does not sprint when stamina is empty", () => {
+    const d = createDog({ x: 0, y: 0 });
+    d.stamina = 0;
+    dogControlSystem(d, intent({ moveDir: { x: 1, y: 0 }, sprint: true }));
+    expect(d.force.x).toBeCloseTo(config.dog.maxSpeed);
+  });
 });
