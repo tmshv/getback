@@ -141,8 +141,8 @@ describe("pen capture integration", () => {
   });
 });
 
-describe("one-way gate containment integration", () => {
-  it("a penned sheep pulled toward the gate cannot escape", () => {
+describe("penned settling integration", () => {
+  it("a penned sheep settles inside and ignores grass outside the gate", () => {
     // Axis-aligned square pen 100..200; gate = edge index 3 (left edge), inward = +x.
     const square = [
       { x: 100, y: 100 },
@@ -151,15 +151,15 @@ describe("one-way gate containment integration", () => {
       { x: 100, y: 200 },
     ];
     const pen = buildPen(square, 3);
-    // Grass is lush to the WEST (outside the gate) so `graze` pulls the sheep west,
-    // straight at the gate it would otherwise exit through.
+    // Grass is lush to the WEST (outside the gate): a non-penned sheep WOULD graze
+    // straight at the gate. A penned sheep must ignore it and stay put.
     const grass = createGrassField({ cols: 30, rows: 18, cellSize: 16, regrowRate: 0, depleteRate: 0, initial: 0 });
     for (let cx = 0; cx < 30; cx++) {
       const d = 1 - 0.9 * (cx / 29); // 1.0 (west) -> 0.1 (east): gradient points WEST
       for (let cy = 0; cy < 18; cy++) setDensityAt(grass, cx * 16 + 8, cy * 16 + 8, d);
     }
     const sheep = [
-      createSheep({ x: 150, y: 150 }, defaultSheepTraits()), // inside, center — the one we track
+      createSheep({ x: 150, y: 150 }, defaultSheepTraits()), // inside, the one we track
       createSheep({ x: 5, y: 5 }, defaultSheepTraits()), // far outside -> pen never full -> no respawn
     ];
     const game = new Game(createWorld(sheep, grass, [], pen));
@@ -168,11 +168,37 @@ describe("one-way gate containment integration", () => {
     for (let i = 0; i < 1800; i++) {
       game.update(1 / 60);
       minX = Math.min(minX, sheep[0]!.pos.x);
-      expect(penContains(pen, sheep[0]!.pos)).toBe(true); // INVARIANT: never escapes
+      expect(penContains(pen, sheep[0]!.pos)).toBe(true); // INVARIANT: stays contained
       expect(sheep[0]!.penned).toBe(true);
     }
-    expect(minX).toBeLessThan(115); // genuinely pressed the gate (non-vacuous)
+    expect(minX).toBeGreaterThan(130); // settled near centre — did NOT press the gate (calm)
     expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
+  });
+
+  it("a penned flock settles without collapsing onto itself", () => {
+    const square = [
+      { x: 100, y: 100 },
+      { x: 200, y: 100 },
+      { x: 200, y: 200 },
+      { x: 100, y: 200 },
+    ];
+    const pen = buildPen(square, 3);
+    const sheep = [
+      createSheep({ x: 140, y: 140 }, defaultSheepTraits()),
+      createSheep({ x: 160, y: 140 }, defaultSheepTraits()),
+      createSheep({ x: 150, y: 165 }, defaultSheepTraits()),
+      createSheep({ x: 5, y: 5 }, defaultSheepTraits()), // outside -> pen never full -> no respawn
+    ];
+    const inside = [sheep[0]!, sheep[1]!, sheep[2]!];
+    const game = new Game(createWorld(sheep, undefined, [], pen));
+
+    for (let i = 0; i < 600; i++) game.update(1 / 60);
+
+    for (const s of inside) {
+      expect(penContains(pen, s.pos)).toBe(true);
+      expect(s.penned).toBe(true);
+    }
+    expect(minPairwise(inside)).toBeGreaterThan(4); // separation kept them apart (no collapse)
   });
 });
 
