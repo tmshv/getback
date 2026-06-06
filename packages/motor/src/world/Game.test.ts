@@ -12,6 +12,8 @@ import { generatePen } from "../world/penGen.js";
 import { buildPen, penContains } from "../world/Pen.js";
 import { config } from "../config.js";
 import { createAttractor, createTree } from "../entities/Attractor.js";
+import { createTreat } from "../entities/Treat.js";
+import { grantBuff } from "../systems/BuffSystem.js";
 
 function centroid(sheep: Sheep[]) {
   const c = { x: 0, y: 0 };
@@ -428,5 +430,49 @@ describe("drive goal cascade integration", () => {
     const dx = s.pos.x - obstacle.pos.x;
     const dy = s.pos.y - obstacle.pos.y;
     expect(Math.hypot(dx, dy)).toBeGreaterThan(obstacle.radius + s.radius - 1);
+  });
+});
+
+describe("treat pickup integration", () => {
+  it("dog walking over a treat refills stamina and fires treatCollected", () => {
+    const dog = createDog({ x: 100, y: 100 });
+    dog.stamina = 0;
+    const world = createWorld([], undefined, [], null, dog, makeRng(1));
+    // Manually place a treat on top of the dog
+    const treat = createTreat({ x: 100, y: 100 });
+    world.treats.push(treat);
+
+    const positions: import("@getback/math").Vec2[] = [];
+    world.signals.treatCollected.add((p) => positions.push(p));
+
+    const game = new Game(world);
+    game.update(1 / 60);
+
+    expect(world.treats.length).toBe(0); // consumed
+    expect(dog.stamina).toBe(config.stamina.max);
+    expect(positions.length).toBe(1);
+  });
+});
+
+describe("zoomies buff integration", () => {
+  it("a zoomies buff raises effective dog speed above plain maxSpeed, then expires", () => {
+    const dog = createDog({ x: 100, y: 100 });
+    const world = createWorld([], undefined, [], null, dog, makeRng(1));
+    const game = new Game(world);
+    const intent = { moveDir: { x: 1, y: 0 }, sprint: false, bark: false };
+
+    // Grant zoomies directly (grantBuff is a named export of BuffSystem)
+    grantBuff(dog, "zoomies");
+
+    // After enough steps to converge (within the 4s buff window) the dog's
+    // velocity exceeds plain maxSpeed thanks to the zoomies-raised clamp.
+    for (let i = 0; i < 120; i++) game.update(1 / 60, intent);
+    expect(dog.vel.x).toBeGreaterThan(config.dog.maxSpeed);
+
+    // Tick past the duration to expire the buff. update() clamps dt to
+    // config.dtClampMax, so step enough clamped frames to exceed the buff window.
+    const frames = Math.ceil((config.buffs.zoomies.duration + 1) / config.dtClampMax);
+    for (let i = 0; i < frames; i++) game.update(config.dtClampMax, intent);
+    expect(dog.activeBuff).toBeNull();
   });
 });

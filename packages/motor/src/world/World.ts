@@ -17,6 +17,8 @@ import { Emitter, rectGeometry } from "./Emitter.js";
 import { createSheep, defaultSheepTraits, resetSheep } from "../entities/Sheep.js";
 import type { Treat } from "../entities/Treat.js";
 import { createTreat } from "../entities/Treat.js";
+import type { AmbientScareState } from "../systems/AmbientScareSystem.js";
+import { createAmbientScareState } from "../systems/AmbientScareSystem.js";
 
 export interface Rect {
   x: number;
@@ -42,6 +44,7 @@ export interface World {
   treats:       Treat[];
   treatPool:    AgentPool<Treat>;
   treatEmitter: Emitter;
+  ambientScareState: AmbientScareState;
 }
 
 function defaultGrass(): GrassField {
@@ -96,6 +99,7 @@ export function createWorld(
       max:    config.treats.max,
       rng,
     }),
+    ambientScareState: createAmbientScareState(rng),
   };
 }
 
