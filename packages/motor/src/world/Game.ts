@@ -7,7 +7,7 @@ import { steeringSystem } from "../systems/SteeringSystem.js";
 import { movementSystem, integrate } from "../systems/MovementSystem.js";
 import { collisionSystem } from "../systems/CollisionSystem.js";
 import { penSystem } from "../systems/PenSystem.js";
-import { fenceCollisionSystem } from "../systems/FenceCollisionSystem.js";
+import { fenceCollisionSystem, dogPenCollisionSystem } from "../systems/FenceCollisionSystem.js";
 import type { DogIntent } from "../types.js";
 import { dogControlSystem } from "../systems/DogControlSystem.js";
 import { scareSystem } from "../systems/ScareSystem.js";
@@ -34,7 +34,7 @@ export class Game {
     neighborhoodSystem(sheep, grid);
     scareSystem(stress, dog, intent, step);
     fearSystem(sheep, stress, step);
-    steeringSystem(sheep, { grass, obstacles, stress }, step);
+    steeringSystem(sheep, { grass, obstacles, stress, pen }, step);
     if (dog) dogControlSystem(dog, intent);
     if (dog) staminaSystem(dog, intent, step);
     movementSystem(sheep, step);
@@ -43,6 +43,7 @@ export class Game {
     if (dog) collisionSystem([dog], obstacles);
     if (pen) {
       fenceCollisionSystem(pen, sheep);
+      if (dog) dogPenCollisionSystem(pen, dog);
       penSystem(pen, sheep);
     }
     respawnSystem(this.world);

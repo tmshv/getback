@@ -32,7 +32,7 @@ export { generatePen } from "./world/penGen.js";
 export type { Pen, Segment } from "./world/Pen.js";
 export { buildPen, penContains } from "./world/Pen.js";
 export { penSystem } from "./systems/PenSystem.js";
-export { fenceCollisionSystem } from "./systems/FenceCollisionSystem.js";
+export { fenceCollisionSystem, dogPenCollisionSystem } from "./systems/FenceCollisionSystem.js";
 export type { StressSource, StressKind } from "./scare/StressSource.js";
 export { scareSystem } from "./systems/ScareSystem.js";
 export { fearSystem } from "./systems/FearSystem.js";

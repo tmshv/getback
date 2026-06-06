@@ -70,3 +70,11 @@ export function fenceCollisionSystem(pen: Pen, units: Mobile[]): void {
     resolveGate(u, pen.gate.mouth, pen.gate.inwardNormal);
   }
 }
+
+// The dog collides with the pen's SOLID FENCES but is EXEMPT from the one-way
+// gate (spec §10.5): the gate mouth is not tested, so the dog passes through the
+// opening freely — in to push stragglers, out again — while solid walls still
+// stop it. Runs after the dog integrates (prevPos is its pre-move position).
+export function dogPenCollisionSystem(pen: Pen, dog: Mobile): void {
+  for (const seg of pen.fences) resolveFence(dog, seg);
+}

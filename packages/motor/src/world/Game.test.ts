@@ -330,3 +330,34 @@ describe("respawn integration", () => {
     }
   });
 });
+
+describe("dog vs pen integration", () => {
+  const square = [
+    { x: 100, y: 100 },
+    { x: 200, y: 100 },
+    { x: 200, y: 200 },
+    { x: 100, y: 200 },
+  ];
+
+  it("the dog can pass through the gate (exempt from the one-way gate)", () => {
+    const pen = buildPen(square, 3); // gate = left edge (x=100)
+    const dog = createDog({ x: 50, y: 150 }); // west, straight in front of the gate
+    const game = new Game(createWorld([], undefined, [], pen, dog));
+    const intent = { moveDir: { x: 1, y: 0 }, sprint: true, bark: false }; // drive at the gate
+    for (let i = 0; i < 120; i++) game.update(1 / 60, intent);
+    expect(penContains(pen, dog.pos)).toBe(true); // it walked in through the gate
+    expect(dog.pos.x).toBeGreaterThan(100);
+  });
+
+  it("the dog cannot push through a solid pen fence", () => {
+    const pen = buildPen(square, 3);
+    const dog = createDog({ x: 150, y: 50 }); // north of the top fence (y=100)
+    const game = new Game(createWorld([], undefined, [], pen, dog));
+    const intent = { moveDir: { x: 0, y: 1 }, sprint: true, bark: false };
+    for (let i = 0; i < 300; i++) {
+      game.update(1 / 60, intent);
+      expect(penContains(pen, dog.pos)).toBe(false);
+    }
+    expect(dog.pos.y).toBeLessThan(100); // stopped at the fence
+  });
+});
