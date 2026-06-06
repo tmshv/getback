@@ -25,6 +25,8 @@ export { createWorld } from "./world/World.js";
 export { Game } from "./world/Game.js";
 export type { Obstacle, ObstacleKind } from "./entities/Obstacle.js";
 export { createObstacle } from "./entities/Obstacle.js";
+export type { Attractor, AttractorKind } from "./entities/Attractor.js";
+export { createAttractor, createTree } from "./entities/Attractor.js";
 export { collisionSystem } from "./systems/CollisionSystem.js";
 export type { SteerEnv } from "./systems/SteeringSystem.js";
 export type { PenShape, PenGenOptions } from "./world/penGen.js";

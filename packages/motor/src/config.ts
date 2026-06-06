@@ -24,4 +24,9 @@ export const config = {
   flee: { weight: 2.5 },
   fear: { decay: 1.2 }, // fear units shed per second when no stress is near
   bounds: { x: 0, y: 0, w: 480, h: 270 },
+  attractor: {
+    trunkRadius: 7,      // solid tree trunk
+    shadeRadius: 28,     // restful shade canopy, larger than trunk
+    waterRadius: 22,     // default water hole radius
+  },
 } as const;
