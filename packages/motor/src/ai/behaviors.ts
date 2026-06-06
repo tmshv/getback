@@ -62,6 +62,9 @@ export function cohesion(k: number): BehaviorNode {
         cy += scratch[i]!.n.pos.y;
       }
       seek(e, { x: cx / count, y: cy / count }, out);
+      const boost = 1 + ctx.fear; // scared sheep pull toward the flock harder (bunch)
+      out.x *= boost;
+      out.y *= boost;
       return "fired";
     },
   };

@@ -19,14 +19,14 @@ describe("separation", () => {
     const self = agent({ pos: { x: 0, y: 0 } });
     const near = agent({ pos: { x: 4, y: 0 } });
     const out = { x: 0, y: 0 };
-    separation(12).run(self, { neighbors: [near], grass: noGrass, obstacles: [], stress: [], dt: 0 }, out);
+    separation(12).run(self, { neighbors: [near], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
     expect(out.x).toBeLessThan(0);
   });
   it("ignores neighbors beyond personalSpace", () => {
     const self = agent();
     const far = agent({ pos: { x: 50, y: 0 } });
     const out = { x: 1, y: 1 };
-    separation(12).run(self, { neighbors: [far], grass: noGrass, obstacles: [], stress: [], dt: 0 }, out);
+    separation(12).run(self, { neighbors: [far], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
     expect(out).toEqual({ x: 0, y: 0 });
   });
 });
@@ -37,7 +37,7 @@ describe("cohesion", () => {
     const a = agent({ pos: { x: 10, y: 0 } });
     const b = agent({ pos: { x: 20, y: 0 } });
     const out = { x: 0, y: 0 };
-    cohesion(6).run(self, { neighbors: [a, b], grass: noGrass, obstacles: [], stress: [], dt: 0 }, out);
+    cohesion(6).run(self, { neighbors: [a, b], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
     expect(out.x).toBeGreaterThan(0);
   });
 });
@@ -47,14 +47,14 @@ describe("follow", () => {
     const self = agent({ vel: { x: 0, y: 0 } });
     const mover = agent({ vel: { x: 8, y: 0 } });
     const out = { x: 0, y: 0 };
-    follow(2).run(self, { neighbors: [mover], grass: noGrass, obstacles: [], stress: [], dt: 0 }, out);
+    follow(2).run(self, { neighbors: [mover], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
     expect(out.x).toBeGreaterThan(0);
   });
   it("ignores stationary neighbors", () => {
     const self = agent();
     const still = agent({ vel: { x: 0, y: 0 } });
     const out = { x: 1, y: 1 };
-    follow(2).run(self, { neighbors: [still], grass: noGrass, obstacles: [], stress: [], dt: 0 }, out);
+    follow(2).run(self, { neighbors: [still], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
     expect(out).toEqual({ x: 0, y: 0 });
   });
 });
@@ -65,14 +65,14 @@ describe("graze", () => {
     setDensityAt(grass, 70, 50, 1); // lush cell to the east of (50,50)
     const self = { pos: { x: 50, y: 50 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const out = { x: 0, y: 0 };
-    graze().run(self, { neighbors: [], grass, obstacles: [], stress: [], dt: 0 }, out);
+    graze().run(self, { neighbors: [], grass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
     expect(out.x).toBeGreaterThan(0);
   });
   it("produces no force on a uniform field", () => {
     const grass = createGrassField({ cols: 10, rows: 10, cellSize: 10, regrowRate: 0, depleteRate: 0, initial: 0.5 });
     const self = { pos: { x: 50, y: 50 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const out = { x: 1, y: 1 };
-    graze().run(self, { neighbors: [], grass, obstacles: [], stress: [], dt: 0 }, out);
+    graze().run(self, { neighbors: [], grass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
     expect(out).toEqual({ x: 0, y: 0 });
   });
 });
@@ -82,14 +82,14 @@ describe("obstacleAvoid", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const obs = createObstacle("rock", { x: 12, y: 0 }, 8);
     const out = { x: 0, y: 0 };
-    obstacleAvoid(18).run(self, { neighbors: [], grass: noGrass, obstacles: [obs], stress: [], dt: 0 }, out);
+    obstacleAvoid(18).run(self, { neighbors: [], grass: noGrass, obstacles: [obs], stress: [], fear: 0, dt: 0 }, out);
     expect(out.x).toBeLessThan(0);
   });
   it("ignores obstacles outside the avoid range", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const obs = createObstacle("rock", { x: 500, y: 0 }, 8);
     const out = { x: 1, y: 1 };
-    obstacleAvoid(18).run(self, { neighbors: [], grass: noGrass, obstacles: [obs], stress: [], dt: 0 }, out);
+    obstacleAvoid(18).run(self, { neighbors: [], grass: noGrass, obstacles: [obs], stress: [], fear: 0, dt: 0 }, out);
     expect(out).toEqual({ x: 0, y: 0 });
   });
 });
@@ -99,14 +99,26 @@ describe("fleeStress", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const src: StressSource = { kind: "bark", pos: { x: 10, y: 0 }, radius: 70, intensity: 1 };
     const out = { x: 0, y: 0 };
-    fleeStress().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
+    fleeStress().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], fear: 0, dt: 0 }, out);
     expect(out.x).toBeLessThan(0);
   });
   it("ignores stress sources out of range", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const src: StressSource = { kind: "bark", pos: { x: 500, y: 0 }, radius: 70, intensity: 1 };
     const out = { x: 1, y: 1 };
-    fleeStress().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], dt: 0 }, out);
+    fleeStress().run(self, { neighbors: [], grass: noGrass, obstacles: [], stress: [src], fear: 0, dt: 0 }, out);
     expect(out).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe("cohesion fear boost", () => {
+  it("produces a stronger pull toward the flock when afraid", () => {
+    const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
+    const a = { pos: { x: 30, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
+    const calm = { x: 0, y: 0 };
+    const scared = { x: 0, y: 0 };
+    cohesion(6).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, calm);
+    cohesion(6).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 1, dt: 0 }, scared);
+    expect(Math.hypot(scared.x, scared.y)).toBeGreaterThan(Math.hypot(calm.x, calm.y));
   });
 });

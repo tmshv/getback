@@ -12,6 +12,7 @@ export interface SteerContext {
   grass: GrassField;
   obstacles: readonly Obstacle[];
   stress: readonly StressSource[];
+  fear: number; // the steering sheep's own fear drive [0..1]
   dt: number;
 }
 
