@@ -3,6 +3,7 @@ import { dogControlSystem } from "./DogControlSystem.js";
 import { createDog } from "../entities/Dog.js";
 import { config } from "../config.js";
 import type { DogIntent } from "../types.js";
+import { grantBuff } from "./BuffSystem.js";
 
 const intent = (over: Partial<DogIntent> = {}): DogIntent => ({ moveDir: { x: 0, y: 0 }, sprint: false, bark: false, ...over });
 
@@ -36,5 +37,16 @@ describe("dogControlSystem", () => {
     d.stamina = 0;
     dogControlSystem(d, intent({ moveDir: { x: 1, y: 0 }, sprint: true }));
     expect(d.force.x).toBeCloseTo(config.dog.maxSpeed);
+  });
+});
+
+describe("zoomies buff", () => {
+  it("zoomies buff raises effective top speed above the sprint cap", () => {
+    const dog = createDog({ x: 0, y: 0 });
+    grantBuff(dog, "zoomies");
+    dogControlSystem(dog, intent({ moveDir: { x: 1, y: 0 } }));
+    // force.x drives toward zoomies-scaled speed; must exceed plain maxSpeed
+    // (force is vel-error; starting from vel=0, force ≈ target speed × mult)
+    expect(dog.force.x).toBeGreaterThan(config.dog.maxSpeed);
   });
 });
