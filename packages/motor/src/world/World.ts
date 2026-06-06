@@ -7,6 +7,10 @@ import type { Pen } from "./Pen.js";
 import type { Dog } from "../entities/Dog.js";
 import { config } from "../config.js";
 import type { StressSource } from "../scare/StressSource.js";
+import type { Rng } from "@getback/math";
+import { makeRng } from "@getback/math";
+import type { GameSignals } from "./signals.js";
+import { createSignals } from "./signals.js";
 
 export interface Rect {
   x: number;
@@ -24,6 +28,8 @@ export interface World {
   dog: Dog | null;
   stress: StressSource[];
   grid: UniformGrid<Sheep>;
+  rng: Rng;
+  signals: GameSignals;
 }
 
 function defaultGrass(): GrassField {
@@ -44,6 +50,7 @@ export function createWorld(
   obstacles: Obstacle[] = [],
   pen: Pen | null = null,
   dog: Dog | null = null,
+  rng: Rng = makeRng(1),
 ): World {
   return {
     sheep,
@@ -54,5 +61,7 @@ export function createWorld(
     dog,
     stress: [],
     grid: new UniformGrid<Sheep>(config.flock.perception),
+    rng,
+    signals: createSignals(),
   };
 }

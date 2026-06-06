@@ -158,7 +158,10 @@ describe("one-way gate containment integration", () => {
       const d = 1 - 0.9 * (cx / 29); // 1.0 (west) -> 0.1 (east): gradient points WEST
       for (let cy = 0; cy < 18; cy++) setDensityAt(grass, cx * 16 + 8, cy * 16 + 8, d);
     }
-    const sheep = [createSheep({ x: 150, y: 150 }, defaultSheepTraits())]; // inside, center
+    const sheep = [
+      createSheep({ x: 150, y: 150 }, defaultSheepTraits()), // inside, center — the one we track
+      createSheep({ x: 5, y: 5 }, defaultSheepTraits()), // far outside -> pen never full -> no respawn
+    ];
     const game = new Game(createWorld(sheep, grass, [], pen));
 
     let minX = Infinity;
@@ -261,5 +264,43 @@ describe("stamina integration", () => {
     const game = new Game(world);
     game.update(1 / 60, { moveDir: { x: 0, y: 0 }, sprint: false, bark: true });
     expect(world.stress.some((s) => s.kind === "bark")).toBe(false);
+  });
+});
+
+describe("respawn integration", () => {
+  it("herding the whole flock into the pen spawns a fresh flock + new pen", () => {
+    const square = [
+      { x: 100, y: 100 },
+      { x: 200, y: 100 },
+      { x: 200, y: 200 },
+      { x: 100, y: 200 },
+    ];
+    const pen = buildPen(square, 3);
+    // place the whole (tiny) flock inside the pen so it fills on the first step
+    const sheep = [
+      createSheep({ x: 140, y: 140 }, defaultSheepTraits()),
+      createSheep({ x: 160, y: 160 }, defaultSheepTraits()),
+    ];
+    const world = createWorld(sheep, undefined, [], pen, null, makeRng(3));
+    let filled = 0;
+    world.signals.penFilled.add(() => filled++);
+    const game = new Game(world);
+
+    game.update(1 / 60);
+
+    expect(filled).toBe(1); // the flock was herded home
+    expect(world.pen).not.toBe(pen); // a brand-new pen
+    expect(world.sheep.length).toBe(2); // a fresh flock of the same size
+    expect(world.sheep[0]).not.toBe(sheep[0]); // genuinely new sheep
+
+    // the slice's central guarantee: stepping on after a respawn (the flock + pen
+    // were reassigned mid-update) keeps simulating the fresh world, no stale refs.
+    const fresh = world.sheep;
+    for (let i = 0; i < 30; i++) game.update(1 / 60);
+    expect(world.sheep).toBe(fresh); // no spurious re-respawn (fresh flock is scattered, not penned)
+    for (const s of world.sheep) {
+      expect(Number.isFinite(s.pos.x)).toBe(true);
+      expect(Number.isFinite(s.pos.y)).toBe(true);
+    }
   });
 });
