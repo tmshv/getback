@@ -7,6 +7,7 @@ export { config } from "./config.js";
 export { seek, flee, arrive } from "./steering/primitives.js";
 export type { Status, SteerContext, BehaviorNode, Predicate } from "./steering/types.js";
 export { blend } from "./steering/Behavior.js";
+export { selector, conditional } from "./steering/combinators.js";
 export type { WeightedChild } from "./steering/Behavior.js";
 export { separation, cohesion, follow, graze, obstacleAvoid, fleeStress } from "./ai/behaviors.js";
 export { buildSheepTree } from "./ai/trees.js";
