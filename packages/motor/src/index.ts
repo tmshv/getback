@@ -12,7 +12,7 @@ export type { WeightedChild } from "./steering/Behavior.js";
 export { separation, cohesion, follow, graze, obstacleAvoid, fleeStress, penInterior, isPenned } from "./ai/behaviors.js";
 export { buildSheepTree } from "./ai/trees.js";
 export type { Sheep, SheepTraits } from "./entities/Sheep.js";
-export { createSheep, defaultSheepTraits } from "./entities/Sheep.js";
+export { createSheep, defaultSheepTraits, rollSheepTraits } from "./entities/Sheep.js";
 export type { GrassField, GrassFieldOptions } from "./grass/GrassField.js";
 export { createGrassField, densityAt, setDensityAt, depleteAt, regrow, gradientAt } from "./grass/GrassField.js";
 export { grassSystem } from "./systems/GrassSystem.js";

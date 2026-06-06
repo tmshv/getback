@@ -29,4 +29,11 @@ export const config = {
     shadeRadius: 28,     // restful shade canopy, larger than trunk
     waterRadius: 22,     // default water hole radius
   },
+  traits: {
+    maxSpeedJitter: 0.2,   // ±20% of flock.maxSpeed
+    boldnessMin: 0.3,
+    boldnessMax: 0.9,
+    sociabilityMin: 0.4,
+    sociabilityMax: 1.0,
+  },
 } as const;
