@@ -219,3 +219,30 @@ describe("bark & flee integration", () => {
     expect(Number.isFinite(sheep[0]!.pos.x)).toBe(true);
   });
 });
+
+describe("stamina integration", () => {
+  it("holding sprint+bark depletes stamina, then it regenerates when idle", () => {
+    const dog = createDog({ x: 150, y: 150 });
+    const game = new Game(createWorld([], undefined, [], null, dog));
+    const busy = { moveDir: { x: 1, y: 0 }, sprint: true, bark: true };
+
+    for (let i = 0; i < 180; i++) game.update(1 / 60, busy);
+    const drained = dog.stamina;
+    expect(drained).toBeLessThan(config.stamina.max * 0.5);
+
+    const idle = { moveDir: { x: 0, y: 0 }, sprint: false, bark: false };
+    for (let i = 0; i < 180; i++) game.update(1 / 60, idle);
+    expect(dog.stamina).toBeGreaterThan(drained);
+    expect(dog.stamina).toBeLessThanOrEqual(config.stamina.max);
+  });
+
+  it("a stamina-starved dog cannot bark", () => {
+    const dog = createDog({ x: 150, y: 150 });
+    dog.stamina = 0;
+    const sheep = [createSheep({ x: 165, y: 150 }, defaultSheepTraits())];
+    const world = createWorld(sheep, undefined, [], null, dog);
+    const game = new Game(world);
+    game.update(1 / 60, { moveDir: { x: 0, y: 0 }, sprint: false, bark: true });
+    expect(world.stress.some((s) => s.kind === "bark")).toBe(false);
+  });
+});
