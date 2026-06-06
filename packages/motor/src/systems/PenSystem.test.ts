@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { penSystem } from "./PenSystem.js";
 import { buildPen } from "../world/Pen.js";
 import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
+import { createSignals } from "../world/signals.js";
 
 const square = [
   { x: 0, y: 0 },
@@ -32,5 +33,22 @@ describe("penSystem", () => {
     penSystem(pen, [s]);
     expect(s.penned).toBe(false);
     expect(pen.contained.size).toBe(0);
+  });
+});
+
+describe("sheepPenned signal", () => {
+  it("emits sheepPenned once for each newly captured sheep", () => {
+    const pen = buildPen(square, 3);
+    const inside = createSheep({ x: 20, y: 20 }, defaultSheepTraits());
+    const outside = createSheep({ x: 200, y: 200 }, defaultSheepTraits());
+    const signals = createSignals();
+    let count = 0;
+    signals.sheepPenned.add(() => count++);
+
+    penSystem(pen, [inside, outside], signals);
+    expect(count).toBe(1);
+    // Second call: already penned — no extra emit.
+    penSystem(pen, [inside, outside], signals);
+    expect(count).toBe(1);
   });
 });
