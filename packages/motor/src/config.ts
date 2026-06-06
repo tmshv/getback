@@ -36,4 +36,11 @@ export const config = {
     sociabilityMin: 0.4,
     sociabilityMax: 1.0,
   },
+  spawn: {
+    flockSize: 18,
+    period: 0,
+    areaInset: 30,
+    poolInitialSize: 0,
+    maxTries: 32,
+  },
 } as const;
