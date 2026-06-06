@@ -292,5 +292,15 @@ describe("respawn integration", () => {
     expect(world.pen).not.toBe(pen); // a brand-new pen
     expect(world.sheep.length).toBe(2); // a fresh flock of the same size
     expect(world.sheep[0]).not.toBe(sheep[0]); // genuinely new sheep
+
+    // the slice's central guarantee: stepping on after a respawn (the flock + pen
+    // were reassigned mid-update) keeps simulating the fresh world, no stale refs.
+    const fresh = world.sheep;
+    for (let i = 0; i < 30; i++) game.update(1 / 60);
+    expect(world.sheep).toBe(fresh); // no spurious re-respawn (fresh flock is scattered, not penned)
+    for (const s of world.sheep) {
+      expect(Number.isFinite(s.pos.x)).toBe(true);
+      expect(Number.isFinite(s.pos.y)).toBe(true);
+    }
   });
 });

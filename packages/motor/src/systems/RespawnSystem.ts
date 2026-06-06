@@ -18,7 +18,8 @@ export function respawnSystem(world: World): void {
   const rng = world.rng;
   const b = world.bounds;
 
-  // a new pen at a random centre that fits inside the pasture
+  // a new pen at a random centre that fits inside the pasture. Assumes
+  // rMax <= min(w,h)/2 so the inset range stays valid (true for config defaults).
   const m = config.pen.rMax;
   const center = { x: rng.range(b.x + m, b.x + b.w - m), y: rng.range(b.y + m, b.y + b.h - m) };
   const shape = generatePen(rng, {
@@ -34,11 +35,11 @@ export function respawnSystem(world: World): void {
 
   // refill with a brand-new flock, scattered outside the new pen
   const fresh: typeof flock = [];
-  const margin = 20;
+  const margin = config.respawn.scatterMargin;
   for (let i = 0; i < count; i++) {
     let x = b.x + b.w / 2;
     let y = b.y + b.h / 2;
-    for (let tries = 0; tries < 20; tries++) {
+    for (let tries = 0; tries < config.respawn.scatterTries; tries++) {
       x = rng.range(b.x + margin, b.x + b.w - margin);
       y = rng.range(b.y + margin, b.y + b.h - margin);
       if (!penContains(newPen, { x, y })) break;
