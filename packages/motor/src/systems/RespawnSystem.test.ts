@@ -4,7 +4,8 @@ import { respawnSystem } from "./RespawnSystem.js";
 import { createWorld } from "../world/World.js";
 import { buildPen, penContains } from "../world/Pen.js";
 import { penSystem } from "./PenSystem.js";
-import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
+import { createSheep, defaultSheepTraits, resetSheep } from "../entities/Sheep.js";
+import { AgentPool } from "../world/Pool.js";
 
 // CCW square 0..40, gate edge 3.
 const square = [
@@ -31,6 +32,11 @@ describe("respawnSystem", () => {
     const a = createSheep({ x: 18, y: 18 }, defaultSheepTraits());
     const b = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
     const world = createWorld([a, b], undefined, [], pen, null, makeRng(2));
+    // Wire a pool so RespawnSystem can recycle sheep
+    world.sheepPool = new AgentPool({
+      create: () => createSheep({ x: 0, y: 0 }, defaultSheepTraits()),
+      reset: (s) => resetSheep(s, { x: 0, y: 0 }),
+    });
     let filled = 0;
     world.signals.penFilled.add(() => filled++);
 
@@ -40,10 +46,14 @@ describe("respawnSystem", () => {
     expect(filled).toBe(1); // signal fired once
     expect(world.pen).not.toBe(pen); // a new pen
     expect(world.sheep.length).toBe(2); // same count, fresh flock
-    expect(world.sheep).not.toContain(a); // old sheep gone
-    expect(world.sheep).not.toContain(b);
-    // the fresh sheep are scattered OUTSIDE the new pen (not instantly re-penned)
-    for (const s of world.sheep) expect(penContains(world.pen!, s.pos)).toBe(false);
+    // With pool recycling the same object identities may be reused; what matters
+    // is that every sheep was reset — not penned, drives cleared, outside new pen.
+    for (const s of world.sheep) {
+      expect(s.penned).toBe(false);
+      expect(s.drives.fear).toBe(0);
+      expect(s.drives.hunger).toBe(0);
+      expect(penContains(world.pen!, s.pos)).toBe(false);
+    }
   });
 
   it("is a no-op with no pen or an empty flock", () => {

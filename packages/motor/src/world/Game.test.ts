@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { Game } from "./Game.js";
 import { createWorld } from "./World.js";
-import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
+import { createSheep, defaultSheepTraits, resetSheep } from "../entities/Sheep.js";
 import type { Sheep } from "../entities/Sheep.js";
+import { AgentPool } from "../world/Pool.js";
 import { createGrassField, setDensityAt } from "../grass/GrassField.js";
 import { createObstacle } from "../entities/Obstacle.js";
 import { createDog } from "../entities/Dog.js";
@@ -310,6 +311,10 @@ describe("respawn integration", () => {
       createSheep({ x: 160, y: 160 }, defaultSheepTraits()),
     ];
     const world = createWorld(sheep, undefined, [], pen, null, makeRng(3));
+    world.sheepPool = new AgentPool({
+      create: () => createSheep({ x: 0, y: 0 }, defaultSheepTraits()),
+      reset: (s) => resetSheep(s, { x: 0, y: 0 }),
+    });
     let filled = 0;
     world.signals.penFilled.add(() => filled++);
     const game = new Game(world);
@@ -319,7 +324,11 @@ describe("respawn integration", () => {
     expect(filled).toBe(1); // the flock was herded home
     expect(world.pen).not.toBe(pen); // a brand-new pen
     expect(world.sheep.length).toBe(2); // a fresh flock of the same size
-    expect(world.sheep[0]).not.toBe(sheep[0]); // genuinely new sheep
+    // With pool recycling object identity may be reused; check reset state instead.
+    for (const s of world.sheep) {
+      expect(s.penned).toBe(false);
+      expect(s.drives.fear).toBe(0);
+    }
 
     // the slice's central guarantee: stepping on after a respawn (the flock + pen
     // were reassigned mid-update) keeps simulating the fresh world, no stale refs.
