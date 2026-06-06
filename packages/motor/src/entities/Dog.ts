@@ -2,9 +2,19 @@ import type { Vec2 } from "@getback/math";
 import type { Mobile } from "../types.js";
 import { config } from "../config.js";
 
-// The player's corgi. For now just a Mobile with dog tuning; stamina/buffs land
-// in a later slice.
-export interface Dog extends Mobile { barkCooldown: number; stamina: number; }
+export type BuffKind = "zoomies" | "megabark" | "calm";
+
+export interface ActiveBuff {
+  kind:     BuffKind;
+  timeLeft: number;
+}
+
+// The player's corgi. Mobile + stamina + current power-up state.
+export interface Dog extends Mobile {
+  barkCooldown: number;
+  stamina:      number;
+  activeBuff:   ActiveBuff | null;
+}
 
 export function createDog(pos: Vec2): Dog {
   return {
@@ -18,5 +28,6 @@ export function createDog(pos: Vec2): Dog {
     facing: "down",
     barkCooldown: 0,
     stamina: config.stamina.max,
+    activeBuff: null,
   };
 }
