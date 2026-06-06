@@ -9,3 +9,5 @@ export { densityToFrame } from "./render/GrassRenderer.js";
 export { frameName, frameFlipX, FRAME_GRID, FRAME_NAMES } from "./atlas/frames.js";
 export type { EntityKind, AnimState } from "./atlas/frames.js";
 export * from "./config.js";
+export type { HudOverride } from "./render/Hud.js";
+export { intentFromKeys, createEdgeTrigger, attachKeyboard } from "./input/keyboard.js";

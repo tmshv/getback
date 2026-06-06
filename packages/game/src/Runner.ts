@@ -21,6 +21,9 @@ import { computeLetterbox } from "./render/letterbox.js";
 import { RenderSystem } from "./render/RenderSystem.js";
 import type { SpriteLike, SpriteFactory, ContainerLike } from "./render/RenderSystem.js";
 import { GrassRenderer } from "./render/GrassRenderer.js";
+import { HudView } from "./render/Hud.js";
+import type { HudOverride } from "./render/Hud.js";
+import { FxSystem } from "./render/Fx.js";
 
 export interface MountOptions {
   /** HTMLElement to append the Pixi canvas to. Default: document.body */
@@ -29,6 +32,8 @@ export interface MountOptions {
   input?: () => DogIntent;
   /** Path to sprites.json (default: "./assets/sprites.json") */
   atlasPath?: string;
+  /** Optional HUD visibility overrides; auto-detected from world when omitted */
+  hud?: HudOverride;
 }
 
 // ── Production SpriteLike adapter ────────────────────────────────────────────
@@ -168,7 +173,15 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
   const renderSystem  = new RenderSystem(factory, containerLike);
   const animTimers    = new Map<Mobile, number>();
 
-  // ── 10. Build Game and wire Ticker ───────────────────────────────────────
+  // ── 10. FX layer — above entities ─────────────────────────────────────────
+  const fxSystem = new FxSystem(world.signals);
+  fxLayer.addChild(fxSystem.view);
+
+  // ── 11. HUD layer — top ───────────────────────────────────────────────────
+  const hudView = new HudView(opts.hud ?? {});
+  hudLayer.addChild(hudView.view);
+
+  // ── 12. Build Game and wire Ticker ───────────────────────────────────────
   const game = new Game(world);
 
   app.ticker.add((ticker) => {
@@ -176,6 +189,8 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
     game.update(dt, opts.input?.());
     grassRenderer.update(world.grass);
     renderSystem.sync(world, animTimers, dt);
+    fxSystem.update(dt);
+    hudView.update(world);
   });
 
   app.ticker.start();
