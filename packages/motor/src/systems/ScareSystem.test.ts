@@ -4,6 +4,9 @@ import { createDog } from "../entities/Dog.js";
 import { config } from "../config.js";
 import type { StressSource } from "../scare/StressSource.js";
 import type { DogIntent } from "../types.js";
+import type { Vec2 } from "@getback/math";
+import { createSignals } from "../world/signals.js";
+import { grantBuff } from "./BuffSystem.js";
 
 const intent = (over: Partial<DogIntent> = {}): DogIntent => ({ moveDir: { x: 0, y: 0 }, sprint: false, bark: false, ...over });
 
@@ -58,5 +61,33 @@ describe("scareSystem stamina gate", () => {
     scareSystem(stress, dog, intent({ bark: true }), 1 / 60);
     expect(stress.some((s) => s.kind === "bark")).toBe(false);
     expect(dog.stamina).toBe(config.stamina.barkCost - 1);
+  });
+});
+
+describe("barked signal", () => {
+  it("emits barked with the dog position when a bark fires", () => {
+    const dog = createDog({ x: 20, y: 30 });
+    dog.stamina = config.stamina.max;
+    const stress: StressSource[] = [];
+    const positions: Vec2[] = [];
+    const signals = createSignals();
+    signals.barked.add((p) => positions.push(p));
+    scareSystem(stress, dog, { moveDir: { x: 0, y: 0 }, sprint: false, bark: true }, 1 / 60, signals);
+    expect(positions.length).toBe(1);
+    expect(positions[0]!.x).toBe(20);
+    expect(positions[0]!.y).toBe(30);
+  });
+});
+
+describe("megabark buff", () => {
+  it("megabark buff increases bark radius and ttl in the emitted StressSource", () => {
+    const dog = createDog({ x: 0, y: 0 });
+    dog.stamina = config.stamina.max;
+    grantBuff(dog, "megabark");
+    const stress: StressSource[] = [];
+    scareSystem(stress, dog, { moveDir: { x: 0, y: 0 }, sprint: false, bark: true }, 1 / 60, createSignals());
+    const bark = stress.find((s) => s.kind === "bark")!;
+    expect(bark).toBeDefined();
+    expect(bark.radius).toBeCloseTo(config.scare.barkRadius * config.buffs.megabark.radiusMult, 2);
   });
 });

@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import { fearSystem } from "./FearSystem.js";
 import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 import type { StressSource } from "../scare/StressSource.js";
+import { config } from "../config.js";
+import { createDog } from "../entities/Dog.js";
+import { grantBuff } from "./BuffSystem.js";
 
 describe("fearSystem", () => {
   it("spikes fear toward the strongest in-range stress (intensity x proximity)", () => {
@@ -55,5 +58,19 @@ describe("fearSystem", () => {
     const src: StressSource = { kind: "bark", pos: { x: 0, y: 0 }, radius: 50, intensity: 5 };
     fearSystem([s], [src], 1 / 60);
     expect(s.drives.fear).toBe(1);
+  });
+});
+
+describe("calm buff", () => {
+  it("calm buff scales down the fear target for all sheep", () => {
+    const sheep = [createSheep({ x: 0, y: 0 }, defaultSheepTraits())];
+    const src: StressSource[] = [{ kind: "presence", pos: { x: 0, y: 0 }, radius: 100, intensity: 1 }];
+    const dog = createDog({ x: 0, y: 0 });
+    grantBuff(dog, "calm");
+
+    // Without calm, fear target would be 1.0; with calm it should be × fearMult
+    fearSystem(sheep, src, 1 / 60, dog);
+    expect(sheep[0]!.drives.fear).toBeLessThan(config.buffs.calm.fearMult + 0.01);
+    expect(sheep[0]!.drives.fear).toBeGreaterThan(0);
   });
 });
