@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { makeRng } from "@getback/math";
-import { createSheep, defaultSheepTraits, rollSheepTraits } from "./Sheep.js";
+import { createSheep, defaultSheepTraits, rollSheepTraits, resetSheep } from "./Sheep.js";
 import { config } from "../config.js";
 
 describe("createSheep", () => {
@@ -67,5 +67,25 @@ describe("createSheep thirst drive", () => {
   it("initialises thirst to 0", () => {
     const s = createSheep({ x: 0, y: 0 }, defaultSheepTraits());
     expect(s.drives.thirst).toBe(0);
+  });
+});
+
+describe("resetSheep", () => {
+  it("repositions the sheep and clears velocity, force, penned, drives", () => {
+    const s = createSheep({ x: 100, y: 100 }, defaultSheepTraits());
+    s.vel.x = 10; s.vel.y = -5;
+    s.force.x = 3; s.force.y = 1;
+    s.penned = true;
+    s.drives.fear = 0.9;
+    s.drives.hunger = 0.7;
+    resetSheep(s, { x: 42, y: 77 });
+    expect(s.pos).toEqual({ x: 42, y: 77 });
+    expect(s.prevPos).toEqual({ x: 42, y: 77 });
+    expect(s.vel).toEqual({ x: 0, y: 0 });
+    expect(s.force).toEqual({ x: 0, y: 0 });
+    expect(s.penned).toBe(false);
+    expect(s.drives.fear).toBe(0);
+    expect(s.drives.hunger).toBe(0);
+    expect(s.neighbors).toHaveLength(0);
   });
 });

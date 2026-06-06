@@ -36,4 +36,11 @@ export const config = {
     sociabilityMin: 0.4,
     sociabilityMax: 1.0,
   },
+  spawn: {
+    flockSize: 18,
+    period: Infinity,   // sentinel: periodic auto-emit disabled; RespawnSystem uses emitNow()
+    areaInset: 30,
+    poolInitialSize: 0,
+    maxTries: 32,
+  },
 } as const;
