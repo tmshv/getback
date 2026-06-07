@@ -19,18 +19,18 @@ Execution order of all plans. Each plan is a self-contained, working, tested sli
 | 9  | [motor-stamina](20260606-motor-stamina.md)                                     | stamina gating sprint/bark                                              | ✅     |
 | 10 | [motor-fear](20260606-motor-fear.md)                                           | fear drive, fear-boosted cohesion bunching                              | ✅     |
 | 11 | [motor-respawn](20260606-motor-respawn.md)                                     | GameSignals + RespawnSystem (endless loop)                             | ✅     |
-| 12 | [motor-herding-feel](20260606-motor-herding-feel.md)                           | penned-calm (selector/conditional nodes), dog blocked by fences        | 📝     |
-| 13 | [motor-attractors-drives](20260606-motor-attractors-drives.md)                 | water/shade attractors, thirst & rest, trait variation                 | 📝     |
-| 14 | [motor-spawn-infra](20260607-motor-spawn-infra.md)                             | Emitter + AgentPool + SpawnSystem, pool-based respawn                  | 📝     |
-| 15 | [motor-treats-buffs-scares](20260608-motor-treats-buffs-scares.md)             | treats, PickupSystem, BuffSystem, ambient scares, richer signals       | 📝     |
+| 12 | [motor-herding-feel](20260606-motor-herding-feel.md)                           | penned-calm (selector/conditional nodes), dog blocked by fences        | ✅     |
+| 13 | [motor-attractors-drives](20260606-motor-attractors-drives.md)                 | water/shade attractors, thirst & rest, trait variation                 | ✅     |
+| 14 | [motor-spawn-infra](20260607-motor-spawn-infra.md)                             | Emitter + AgentPool + SpawnSystem, pool-based respawn                  | ✅     |
+| 15 | [motor-treats-buffs-scares](20260608-motor-treats-buffs-scares.md)             | treats, PickupSystem, BuffSystem, ambient scares, richer signals       | ✅     |
 
 ## Phase 2 — Render layer & playable targets (PixiJS enters here)
 
 | #  | Plan                                                                           | What it delivers                                                        | Status |
 | -- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | ------ |
-| 16 | [game-atlas-render](20260609-game-atlas-render.md)                             | `@getback/game`: atlas pipeline, RenderSystem, AnimationSystem, mount() | 📝     |
-| 17 | [game-input-hud-app](20260610-game-input-hud-app.md)                           | keyboard input, HUD, FX, `apps/getback` (the playable game)            | 📝     |
-| 18 | [examples](20260611-examples.md)                                               | `examples/{one-sheep,several-sheep,only-corgi}`                         | 📝     |
+| 16 | [game-atlas-render](20260609-game-atlas-render.md)                             | `@getback/game`: atlas pipeline, RenderSystem, AnimationSystem, mount() | ✅     |
+| 17 | [game-input-hud-app](20260610-game-input-hud-app.md)                           | keyboard input, HUD, FX, `apps/getback` (the playable game)            | ✅     |
+| 18 | [examples](20260611-examples.md)                                               | `examples/{one-sheep,several-sheep,only-corgi}`                         | ✅     |
 
 ## Notes for the executor
 
@@ -38,3 +38,7 @@ Execution order of all plans. Each plan is a self-contained, working, tested sli
 - **Cross-plan dependencies are forward-only.** A plan reuses what earlier plans merged — when a plan edits `Game.ts`'s update pipeline or a shared signature (e.g. `driveSystem` gains an `attractors` arg in Plan 13), reconcile its snippets against the *then-current* merged code; the plans assume sequential execution.
 - **Render plans mark each step `[TDD]` / `[smoke]` / `[manual verify]`.** Pure logic (frame resolver, AnimationSystem, RenderSystem diff via injected factory, letterbox math, input mapping, HUD derivations) is TDD; Pixi wiring is smoke/manual.
 - After Phase 2: remaining work is tuning, optional audio, and polish — not new subsystems.
+
+## Status: roadmap complete ✅
+
+All 18 plans are merged to `master` (357 tests passing, typecheck clean). The headless motor is feature-complete and the game is playable in the browser via `apps/getback` (`npm run dev -w getback-app`) plus three `examples/*`. The only steps NOT machine-verified are the `[manual verify]` browser/visual checks (canvas render, sprite animation, HUD, FX, feel) — these need a human with a browser.
