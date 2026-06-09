@@ -16,7 +16,7 @@ import {
 import { Game } from "@getback/motor";
 import type { World, Mobile, DogIntent } from "@getback/motor";
 
-import { LOGICAL_W, LOGICAL_H, LAYER } from "./config.js";
+import { LOGICAL_W, LOGICAL_H, LAYER, SPRITE_SCALE, SHADOW_SCALE_Y } from "./config.js";
 import { computeLetterbox } from "./render/letterbox.js";
 import { RenderSystem } from "./render/RenderSystem.js";
 import type { SpriteLike, SpriteFactory, ContainerLike } from "./render/RenderSystem.js";
@@ -38,9 +38,14 @@ export interface MountOptions {
 }
 
 // ── Production SpriteLike adapter ────────────────────────────────────────────
-// Wraps a Pixi Sprite to satisfy the SpriteLike interface.
+// Wraps a Pixi Sprite to satisfy the SpriteLike interface. RenderSystem speaks
+// in unit scale (scaleX = ±1 for facing flips); the adapter composes that with
+// the sprite's base display scale (native-res art drawn down to world size).
 class PixiSpriteLike implements SpriteLike {
-  constructor(public readonly sprite: Sprite) {}
+  constructor(
+    public readonly sprite: Sprite,
+    private readonly baseScale: number = 1,
+  ) {}
 
   get x()       { return this.sprite.x; }
   set x(v)      { this.sprite.x = v; }
@@ -51,8 +56,8 @@ class PixiSpriteLike implements SpriteLike {
   get zIndex()  { return this.sprite.zIndex; }
   set zIndex(v) { this.sprite.zIndex = v; }
 
-  get scaleX()  { return this.sprite.scale.x; }
-  set scaleX(v) { this.sprite.scale.x = v; }
+  get scaleX()  { return this.sprite.scale.x / this.baseScale; }
+  set scaleX(v) { this.sprite.scale.x = v * this.baseScale; }
 
   get texture() { return this.sprite.texture.label ?? ""; }
   set texture(name: string) {
@@ -98,8 +103,11 @@ class PixiContainerLike implements ContainerLike {
 export async function mount(world: World, opts: MountOptions = {}): Promise<{ app: Application }> {
   const atlasPath = opts.atlasPath ?? "./assets/sprites.json";
 
-  // ── 1. Set nearest-neighbour globally (before any texture load) ────────────
-  TextureSource.defaultOptions.scaleMode = "nearest";
+  // ── 1. Texture filtering (before any texture load): the atlas ships the
+  // artist's native-resolution pixels; smooth filtering + mipmaps draw them
+  // down to world size without adding pixelation.
+  TextureSource.defaultOptions.scaleMode = "linear";
+  TextureSource.defaultOptions.autoGenerateMipmaps = true;
 
   // ── 2. Boot Pixi Application ───────────────────────────────────────────────
   const app = new Application();
@@ -162,14 +170,18 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
   const factory: SpriteFactory = (frameName: string) => {
     const entitySprite = new Sprite(Texture.from(frameName));
     entitySprite.anchor.set(0.5, 1); // feet-anchored
+    entitySprite.scale.set(SPRITE_SCALE);
 
     const shadowSprite = new Sprite(shadowTexture);
     shadowSprite.anchor.set(0.5, 0.5);
-    shadowSprite.scale.set(1, 0.5);  // flatten into ellipse
+    shadowSprite.scale.set(SPRITE_SCALE, SPRITE_SCALE * SHADOW_SCALE_Y); // flatten into ellipse
+    // The creature frames already carry painted feet shadows; this contact
+    // shadow only grounds the sprite, so keep it faint.
+    shadowSprite.alpha = 0.25;
 
     return {
-      entity: new PixiSpriteLike(entitySprite),
-      shadow: new PixiSpriteLike(shadowSprite),
+      entity: new PixiSpriteLike(entitySprite, SPRITE_SCALE),
+      shadow: new PixiSpriteLike(shadowSprite, SPRITE_SCALE),
     };
   };
 
