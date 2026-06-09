@@ -24,6 +24,12 @@ describe("buildGameWorld", () => {
     expect(world.obstacles.length).toBeGreaterThan(0);
   });
 
+  it("has a water hole and tree shade attractors", () => {
+    const world = buildGameWorld(1);
+    expect(world.attractors.some((a) => a.kind === "water")).toBe(true);
+    expect(world.attractors.some((a) => a.kind === "shade")).toBe(true);
+  });
+
   it("different seeds produce different pen centroids", () => {
     const w1 = buildGameWorld(1);
     const w2 = buildGameWorld(99);

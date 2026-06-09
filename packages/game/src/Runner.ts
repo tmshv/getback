@@ -21,6 +21,7 @@ import { computeLetterbox } from "./render/letterbox.js";
 import { RenderSystem } from "./render/RenderSystem.js";
 import type { SpriteLike, SpriteFactory, ContainerLike } from "./render/RenderSystem.js";
 import { GrassRenderer } from "./render/GrassRenderer.js";
+import { PropsRenderer } from "./render/PropsRenderer.js";
 import { HudView } from "./render/Hud.js";
 import type { HudOverride } from "./render/Hud.js";
 import { FxSystem } from "./render/Fx.js";
@@ -147,9 +148,13 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
   // ── 6. Load atlas ─────────────────────────────────────────────────────────
   await Assets.load(atlasPath);
 
-  // ── 7. Initialize GrassRenderer ──────────────────────────────────────────
+  // ── 7. Initialize GrassRenderer + PropsRenderer ───────────────────────────
   const grassRenderer = new GrassRenderer(terrainLayer);
   grassRenderer.init(world.grass);
+
+  // Static world: pen fences, obstacles, water, treats. Solid props live in
+  // the sortable entities layer so sheep/dog depth-sort against them.
+  const propsRenderer = new PropsRenderer(entitiesLayer, propsLayer);
 
   // ── 8. Build production SpriteFactory ────────────────────────────────────
   const shadowTexture = Texture.from("shadow");
@@ -188,6 +193,7 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
     const dt = ticker.deltaMS / 1000;
     game.update(dt, opts.input?.());
     grassRenderer.update(world.grass);
+    propsRenderer.sync(world);
     renderSystem.sync(world, animTimers, dt);
     fxSystem.update(dt);
     hudView.update(world);
