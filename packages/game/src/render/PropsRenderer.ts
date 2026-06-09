@@ -6,6 +6,7 @@
 import { Container, Sprite, Texture } from "pixi.js";
 import type { World, Pen, Treat } from "@getback/motor";
 import { fencePostPositions, obstacleFrame } from "./props.js";
+import { SPRITE_SCALE } from "../config.js";
 
 const FENCE_POST_SPACING = 10; // px between posts along a fence segment
 
@@ -76,6 +77,7 @@ export class PropsRenderer {
     for (const pos of fencePostPositions(pen.fences, FENCE_POST_SPACING)) {
       const sprite = new Sprite(Texture.from("fence_post"));
       sprite.anchor.set(0.5, 1);
+      sprite.scale.set(SPRITE_SCALE);
       sprite.x = pos.x;
       sprite.y = pos.y + 2; // post base slightly below the line for depth feel
       sprite.zIndex = sprite.y;
@@ -86,6 +88,7 @@ export class PropsRenderer {
     for (const p of [pen.gate.mouth.a, pen.gate.mouth.b]) {
       const sprite = new Sprite(Texture.from("gate_post"));
       sprite.anchor.set(0.5, 1);
+      sprite.scale.set(SPRITE_SCALE);
       sprite.x = p.x;
       sprite.y = p.y + 2;
       sprite.zIndex = sprite.y;
@@ -108,6 +111,7 @@ export class PropsRenderer {
       if (this.treatSprites.has(treat)) continue;
       const sprite = new Sprite(Texture.from("bone"));
       sprite.anchor.set(0.5, 1);
+      sprite.scale.set(SPRITE_SCALE);
       sprite.x = treat.pos.x;
       sprite.y = treat.pos.y + treat.radius;
       sprite.zIndex = sprite.y;

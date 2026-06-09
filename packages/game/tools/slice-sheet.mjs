@@ -13,13 +13,14 @@
 //   2. Find CONNECTED COMPONENTS of opaque pixels; assign each component to
 //      the grid cell containing its centroid; union the bboxes per cell. That
 //      yields the true art rectangle per frame, bleed included.
-//   3. Downscale every frame by a UNIFORM 1/16 (aspect-true, no jitter across
-//      animation frames) with high-quality area resampling, then a hard alpha
-//      threshold so edges stay crisp pixel art.
-//   4. Ground tiles (grass_lush/med/grazed, dirt) instead get an interior crop
-//      of their art scaled to exactly 16×16 (= motor grass cellSize) with
-//      forced full alpha, so the ground never shows holes or seams' corners.
-//   5. Shelf-pack the variable-size frames into the atlas.
+//   3. Crop every frame at NATIVE resolution — the artist's pixels are shipped
+//      untouched (no resampling, no alpha thresholding; only the background is
+//      keyed to transparency). The render layer scales sprites down at draw
+//      time (smooth filtering + mipmaps), so the art keeps its full quality.
+//   4. Ground tiles (grass_lush/med/grazed, dirt) get an interior crop (also
+//      native, fully opaque) — GrassRenderer stretches them to the 16px cell.
+//   5. Shelf-pack the variable-size frames with a generous gutter so mipmap
+//      minification never bleeds neighbouring frames.
 
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
@@ -53,11 +54,9 @@ const SRC_H    = 2880;
 const CELL_W   = SRC_W / SRC_COLS; // 480
 const CELL_H   = SRC_H / SRC_ROWS; // 320
 
-const SCALE     = 16;  // uniform downscale (art px → game px)
-const TILE      = 16;  // ground tile output size = motor grass cellSize
-const TOL       = 30;  // colour tolerance for checkerboard key-out
-const ALPHA_CUT = 96;  // hard alpha threshold after smooth resample
-const PAD       = 1;   // transparent gutter between packed frames
+const TOL = 30;  // colour tolerance for checkerboard key-out
+const PAD = 8;   // transparent gutter so mipmap minification never bleeds
+                 // neighbouring frames into each other
 
 if (!existsSync(ASSET_PATH)) {
   console.error(`slice-sheet: asset0.png not found at ${ASSET_PATH}`);
@@ -157,14 +156,7 @@ const cellBox = new Map(); // "row,col" -> {minX,minY,maxX,maxY}
   }
 }
 
-// ── Build each frame image ───────────────────────────────────────────────────
-function thresholdAlpha(ctx, w, h) {
-  const id = ctx.getImageData(0, 0, w, h);
-  const p = id.data;
-  for (let i = 3; i < p.length; i += 4) p[i] = p[i] >= ALPHA_CUT ? 255 : 0;
-  ctx.putImageData(id, 0, 0);
-}
-
+// ── Build each frame image (NATIVE resolution — pixels shipped untouched) ────
 const built = []; // { name, canvas, w, h, gridRow }
 for (let row = 0; row < SRC_ROWS; row++) {
   for (let col = 0; col < SRC_COLS; col++) {
@@ -176,29 +168,24 @@ for (let row = 0; row < SRC_ROWS; row++) {
     const bh = bb.maxY - bb.minY + 1;
 
     if (GROUND_TILES.has(name)) {
-      // Interior crop (inset 12%) → exact TILE×TILE, fully opaque.
+      // Interior crop (inset 12%) at native res, fully opaque, so the ground
+      // never shows the painted soft border or transparent corners.
       const inset = Math.floor(Math.min(bw, bh) * 0.12);
-      const c = createCanvas(TILE, TILE);
-      const ctx = c.getContext("2d");
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(srcCanvas,
-        bb.minX + inset, bb.minY + inset, bw - 2*inset, bh - 2*inset,
-        0, 0, TILE, TILE);
-      const id = ctx.getImageData(0, 0, TILE, TILE);
-      for (let i = 3; i < id.data.length; i += 4) id.data[i] = 255;
-      ctx.putImageData(id, 0, 0);
-      built.push({ name, canvas: c, w: TILE, h: TILE, gridRow: row });
-    } else {
-      const w = Math.max(1, Math.round(bw / SCALE));
-      const h = Math.max(1, Math.round(bh / SCALE));
+      const w = bw - 2 * inset;
+      const h = bh - 2 * inset;
       const c = createCanvas(w, h);
       const ctx = c.getContext("2d");
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(srcCanvas, bb.minX, bb.minY, bw, bh, 0, 0, w, h);
-      thresholdAlpha(ctx, w, h);
+      ctx.drawImage(srcCanvas, bb.minX + inset, bb.minY + inset, w, h, 0, 0, w, h);
+      const id = ctx.getImageData(0, 0, w, h);
+      for (let i = 3; i < id.data.length; i += 4) id.data[i] = 255;
+      ctx.putImageData(id, 0, 0);
       built.push({ name, canvas: c, w, h, gridRow: row });
+    } else {
+      // 1:1 crop — no resampling, no alpha edits beyond the background key.
+      const c = createCanvas(bw, bh);
+      const ctx = c.getContext("2d");
+      ctx.drawImage(srcCanvas, bb.minX, bb.minY, bw, bh, 0, 0, bw, bh);
+      built.push({ name, canvas: c, w: bw, h: bh, gridRow: row });
     }
   }
 }
