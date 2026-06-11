@@ -4,6 +4,12 @@
 export const LOGICAL_W = 480;
 export const LOGICAL_H = 270;
 
+// Renderer device-pixel resolution: crisp on hi-DPI screens, capped at 2× to
+// avoid over-rendering on 3×+ displays. Guarded so it's safe to import in
+// non-browser (test) environments where `window` is undefined.
+export const RESOLUTION =
+  typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+
 // Layer z-order indices (assigned to Container.zIndex on the stage)
 export const LAYER = {
   TERRAIN: 0,

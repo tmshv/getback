@@ -16,7 +16,7 @@ import {
 import { Game } from "@getback/motor";
 import type { World, Mobile, DogIntent } from "@getback/motor";
 
-import { LOGICAL_W, LOGICAL_H, LAYER, SPRITE_SCALE, SHADOW_SCALE_Y, DEBUG } from "./config.js";
+import { LOGICAL_W, LOGICAL_H, LAYER, SPRITE_SCALE, SHADOW_SCALE_Y, DEBUG, RESOLUTION } from "./config.js";
 import { computeLetterbox } from "./render/letterbox.js";
 import { RenderSystem } from "./render/RenderSystem.js";
 import type { SpriteLike, SpriteFactory, ContainerLike } from "./render/RenderSystem.js";
@@ -115,6 +115,8 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
   await app.init({
     width:       LOGICAL_W,
     height:      LOGICAL_H,
+    resolution:  RESOLUTION,    // crisp on hi-DPI, capped at 2×
+    autoDensity: true,                                      // keep CSS size while backing store is N×
     roundPixels: true,
     backgroundColor: 0x3a7d44,  // pasture green fallback
     autoStart:   false,         // we drive the ticker manually
