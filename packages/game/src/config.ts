@@ -10,7 +10,8 @@ export const LAYER = {
   PROPS:   1,
   ENTITIES: 2,   // depth-sorted by entity y within this container
   FX:      3,
-  HUD:     4,
+  DEBUG:   4,    // gizmos: above the art, below the HUD
+  HUD:     5,
 } as const;
 
 // Frame durations in seconds
@@ -36,4 +37,24 @@ export const GRASS_THRESHOLD = {
   MED:    0.40,
   GRAZED: 0.10,
   // below 0.10 → dirt
+} as const;
+
+// Debug overlay (backtick-toggled schematic view of the simulation).
+export const DEBUG = {
+  TOGGLE_KEY:     "Backquote", // KeyboardEvent.code for the ` key
+  VELOCITY_SCALE: 0.25,        // ≈ look-ahead seconds for the velocity vector
+  FORCE_SCALE:    0.05,        // steering force is larger; scale it down more
+  FONT_SIZE:      5,
+  LINE_WIDTH:     0.5,
+  COLORS: {
+    box:        0x00ff66, // collision circle
+    velocity:   0x33ccff, // current velocity
+    force:      0xff5544, // steering force (snapshot)
+    facing:     0xffee00, // facing tick
+    perception: 0x4466ff, // sheep perception ring
+    personal:   0xaa55ff, // sheep personal-space ring
+    neighbor:   0x55ff55, // flock neighbor links
+    world:      0xffaa22, // obstacles / attractors / pen
+    text:       0xffffff, // labels
+  },
 } as const;

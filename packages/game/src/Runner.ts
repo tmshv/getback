@@ -16,7 +16,7 @@ import {
 import { Game } from "@getback/motor";
 import type { World, Mobile, DogIntent } from "@getback/motor";
 
-import { LOGICAL_W, LOGICAL_H, LAYER, SPRITE_SCALE, SHADOW_SCALE_Y } from "./config.js";
+import { LOGICAL_W, LOGICAL_H, LAYER, SPRITE_SCALE, SHADOW_SCALE_Y, DEBUG } from "./config.js";
 import { computeLetterbox } from "./render/letterbox.js";
 import { RenderSystem } from "./render/RenderSystem.js";
 import type { SpriteLike, SpriteFactory, ContainerLike } from "./render/RenderSystem.js";
@@ -25,6 +25,7 @@ import { PropsRenderer } from "./render/PropsRenderer.js";
 import { HudView } from "./render/Hud.js";
 import type { HudOverride } from "./render/Hud.js";
 import { FxSystem } from "./render/Fx.js";
+import { DebugOverlay } from "./render/DebugOverlay.js";
 
 export interface MountOptions {
   /** HTMLElement to append the Pixi canvas to. Default: document.body */
@@ -140,18 +141,21 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
   const propsLayer    = new Container();
   const entitiesLayer = new Container();
   const fxLayer       = new Container();
+  const debugLayer    = new Container();
   const hudLayer      = new Container();
 
   terrainLayer.zIndex  = LAYER.TERRAIN;
   propsLayer.zIndex    = LAYER.PROPS;
   entitiesLayer.zIndex = LAYER.ENTITIES;
   fxLayer.zIndex       = LAYER.FX;
+  debugLayer.zIndex    = LAYER.DEBUG;
   hudLayer.zIndex      = LAYER.HUD;
 
+  debugLayer.visible = false; // off until toggled
   entitiesLayer.sortableChildren = true;
 
   app.stage.sortableChildren = true;
-  app.stage.addChild(terrainLayer, propsLayer, entitiesLayer, fxLayer, hudLayer);
+  app.stage.addChild(terrainLayer, propsLayer, entitiesLayer, fxLayer, debugLayer, hudLayer);
 
   // ── 6. Load atlas ─────────────────────────────────────────────────────────
   await Assets.load(atlasPath);
@@ -198,6 +202,21 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
   const hudView = new HudView(opts.hud ?? {});
   hudLayer.addChild(hudView.view);
 
+  // ── 11b. Debug overlay — backtick cycles off → overlay → schematic ────────
+  const debugOverlay = new DebugOverlay();
+  debugLayer.addChild(debugOverlay.view);
+  const artLayers = [terrainLayer, propsLayer, entitiesLayer, fxLayer];
+  let debugState = 0; // 0 off · 1 gizmos over art · 2 gizmos only (art hidden)
+  function applyDebugState() {
+    debugLayer.visible = debugState !== 0;
+    for (const l of artLayers) l.visible = debugState !== 2;
+  }
+  window.addEventListener("keydown", (e) => {
+    if (e.code !== DEBUG.TOGGLE_KEY) return;
+    debugState = (debugState + 1) % 3;
+    applyDebugState();
+  });
+
   // ── 12. Build Game and wire Ticker ───────────────────────────────────────
   const game = new Game(world);
 
@@ -209,6 +228,7 @@ export async function mount(world: World, opts: MountOptions = {}): Promise<{ ap
     renderSystem.sync(world, animTimers, dt);
     fxSystem.update(dt);
     hudView.update(world);
+    if (debugState !== 0) debugOverlay.draw(world);
   });
 
   app.ticker.start();
