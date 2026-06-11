@@ -30,3 +30,32 @@ export function selector(children: BehaviorNode[]): BehaviorNode {
     },
   };
 }
+
+// Transparent decorator: runs `child` unchanged (same status, same force in
+// `out`), but records `label` on the entity's debug side-channel when the child
+// FIRES. Used to tag which behaviour mode actually drove a sheep this frame
+// (penned/drink/graze/rest/flee). No-op when the entity has no debug record, so
+// it costs nothing in headless/test runs.
+export function tag(label: string, child: BehaviorNode): BehaviorNode {
+  return {
+    run(e, ctx, out) {
+      const status = child.run(e, ctx, out);
+      if (status === "fired") e.debug?.fired.push(label);
+      return status;
+    },
+  };
+}
+
+// Like `tag`, but records the label only when the child fires AND produces a
+// non-zero force. Some leaves (fleeStress, obstacleAvoid) always report "fired"
+// even with zero force, so status alone can't tell whether they're actually
+// acting — flee uses this so "fleeing" reflects real flee pressure, not presence.
+export function tagIfForce(label: string, child: BehaviorNode): BehaviorNode {
+  return {
+    run(e, ctx, out) {
+      const status = child.run(e, ctx, out);
+      if (status === "fired" && (out.x !== 0 || out.y !== 0)) e.debug?.fired.push(label);
+      return status;
+    },
+  };
+}

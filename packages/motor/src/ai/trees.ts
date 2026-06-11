@@ -1,7 +1,7 @@
 import type { BehaviorNode } from "../steering/types.js";
 import type { SheepTraits } from "../entities/Sheep.js";
 import { blend } from "../steering/Behavior.js";
-import { selector, conditional } from "../steering/combinators.js";
+import { selector, conditional, tag, tagIfForce } from "../steering/combinators.js";
 import {
   separation, cohesion, follow, graze, obstacleAvoid, fleeStress,
   penInterior, isPenned, drink, rest, thirstIsTop, hungerIsTop,
@@ -28,14 +28,15 @@ export function buildSheepTree(traits: SheepTraits): BehaviorNode {
   const slowR = config.attractor.shadeRadius;
 
   // Goal cascade: pick the dominant drive or default to rest at shade.
+  // Each goal leaf is tagged so the debug overlay can name the active mode.
   const goalNode = selector([
-    conditional(thirstIsTop, drink(config.attractor.waterRadius)),
-    conditional(hungerIsTop, graze()),
-    rest(slowR),
+    conditional(thirstIsTop, tag("drink", drink(config.attractor.waterRadius))),
+    conditional(hungerIsTop, tag("graze", graze())),
+    tag("rest", rest(slowR)),
   ]);
 
   const flocking = blend([
-    { node: fleeStress(),                                            weight: config.flee.weight },
+    { node: tagIfForce("flee", fleeStress()),                       weight: config.flee.weight },
     { node: obstacleAvoid(config.obstacleAvoid.avoidRadius),        weight: config.obstacleAvoid.weight },
     { node: goalNode,                                                weight: config.graze.weight },
     { node: separation(traits.personalSpace),                        weight: w.separation },
@@ -49,7 +50,7 @@ export function buildSheepTree(traits: SheepTraits): BehaviorNode {
   ]);
 
   return selector([
-    conditional(isPenned, pennedBlend),
+    tag("penned", conditional(isPenned, pennedBlend)),
     flocking,
   ]);
 }

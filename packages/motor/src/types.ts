@@ -2,6 +2,15 @@ import type { Vec2 } from "@getback/math";
 
 export type Direction = "down" | "up" | "left" | "right";
 
+// Optional per-frame debug side-channel, written by the steering layer and read
+// by the render-side debug overlay. Ignored by the simulation itself.
+//   fired: behavior-tree branch labels that fired this frame (see ai/debug.ts)
+//   force: snapshot of the steering force BEFORE MovementSystem zeroes it
+export interface EntityDebug {
+  fired: string[];
+  force: Vec2;
+}
+
 // Kinematic core shared by every mobile entity (sheep, and later the dog).
 // `force` is a per-frame steering accumulator, zeroed after integration.
 export interface Mobile {
@@ -13,6 +22,7 @@ export interface Mobile {
   maxForce: number;
   facing: Direction;
   prevPos?: Vec2; // position at the START of the current frame; set by MovementSystem, read by FenceCollisionSystem
+  debug?: EntityDebug; // optional; present only when debug instrumentation is wanted
 }
 
 // Abstract player input the motor consumes (the app maps keys -> this). Unused

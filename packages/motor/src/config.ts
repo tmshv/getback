@@ -12,7 +12,7 @@ export const config = {
     moveThreshold: 2, // px/s: a neighbour faster than this counts as "moving" for follow
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
   },
-  grass: { cellSize: 16, regrowRate: 0.03, depleteRate: 0.4, initial: 1 },
+  grass: { cellSize: 16, regrowRate: 0.0006, depleteRate: 0.6, initial: 1 },
   drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.03, drinkRate: 0.6 },
   graze: { weight: 1.0 }, // the goal sub-selector occupies this one blend slot (drink/graze/rest are mutually exclusive)
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
