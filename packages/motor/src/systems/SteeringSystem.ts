@@ -30,6 +30,14 @@ export function steeringSystem(sheep: Sheep[], env: SteerEnv, dt: number): void 
       water: env.water ?? null,
       shade: env.shade ?? null,
     };
+    // Debug side-channel: clear the fired-label list for this frame; the tree's
+    // `tag` nodes refill it during run(). (No-op when debug is absent.)
+    if (s.debug) s.debug.fired.length = 0;
     s.root.run(s, ctx, s.force);
+    // Snapshot the steering force before MovementSystem zeroes it post-integration.
+    if (s.debug) {
+      s.debug.force.x = s.force.x;
+      s.debug.force.y = s.force.y;
+    }
   }
 }

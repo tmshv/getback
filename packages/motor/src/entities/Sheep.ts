@@ -64,6 +64,11 @@ export function resetSheep(sheep: Sheep, pos: Vec2): void {
   sheep.drives.hunger = 0;
   sheep.drives.thirst = 0;
   sheep.neighbors.length = 0;
+  if (sheep.debug) {
+    sheep.debug.fired.length = 0;
+    sheep.debug.force.x = 0;
+    sheep.debug.force.y = 0;
+  }
 }
 
 export function createSheep(pos: Vec2, traits: SheepTraits): Sheep {
@@ -81,5 +86,6 @@ export function createSheep(pos: Vec2, traits: SheepTraits): Sheep {
     penned: false,
     neighbors: [],
     root: buildSheepTree(traits),
+    debug: { fired: [], force: { x: 0, y: 0 } },
   };
 }
