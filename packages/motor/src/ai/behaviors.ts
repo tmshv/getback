@@ -1,6 +1,6 @@
 import type { Mobile } from "../types.js";
 import type { BehaviorNode, Predicate } from "../steering/types.js";
-import { arrive } from "../steering/primitives.js";
+import { arrive, arriveBand } from "../steering/primitives.js";
 import { gradientAt } from "../grass/GrassField.js";
 
 // All three return a Reynolds steering force (desiredVelocity - velocity) so
@@ -68,21 +68,11 @@ export function cohesion(k: number, comfort: number, ramp: number): BehaviorNode
         cx += scratch[i]!.n.pos.x;
         cy += scratch[i]!.n.pos.y;
       }
-      cx /= count;
-      cy /= count;
-      const dx = cx - e.pos.x;
-      const dy = cy - e.pos.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist <= comfort) {
-        out.x = 0;
-        out.y = 0;
-        return "fired";
-      }
-      // Reynolds steer with a speed that ramps in from the comfort boundary.
-      const desiredSpeed = e.maxSpeed * Math.min(1, (dist - comfort) / ramp);
+      // Pull toward the centroid only once outside the comfort band, easing in.
+      arriveBand(e, cx / count, cy / count, comfort, ramp, out);
       const boost = 1 + ctx.fear; // scared sheep pull toward the flock harder (bunch)
-      out.x = ((dx / dist) * desiredSpeed - e.vel.x) * boost;
-      out.y = ((dy / dist) * desiredSpeed - e.vel.y) * boost;
+      out.x *= boost;
+      out.y *= boost;
       return "fired";
     },
   };
@@ -218,9 +208,11 @@ export function penInterior(slowRadius: number): BehaviorNode {
 // True while the steering sheep is inside the pen.
 export const isPenned: Predicate = (_e, ctx) => ctx.penned === true;
 
-// Arrive at the water attractor. Skips (zero force) when ctx.water is absent
-// (no water hole on the map). Weight in the tree scales with thirst config.
-export function drink(slowRadius: number): BehaviorNode {
+// Head to the water attractor, but feel no pull once inside its radius — the
+// sheep is already drinking there (DriveSystem quenches thirst inside the same
+// radius), so a crowd doesn't fight over the exact centre. Skips (zero force)
+// when ctx.water is absent. `ramp` eases the approach in from the rim.
+export function drink(ramp: number, satisfiedFraction: number): BehaviorNode {
   return {
     run(e, ctx, out) {
       const w = ctx.water;
@@ -229,44 +221,36 @@ export function drink(slowRadius: number): BehaviorNode {
         out.y = 0;
         return "skipped";
       }
-      arrive(e, w.pos, slowRadius, out);
+      arriveBand(e, w.pos.x, w.pos.y, w.radius * satisfiedFraction, ramp, out);
       return "fired";
     },
   };
 }
 
-// Arrive at the shade attractor (low-weight idle default). Skips when no shade
-// is available. Weight in the tree is lower than graze/drink.
-export function rest(slowRadius: number): BehaviorNode {
+// Content default: stand still. Produces no steering force, so the settle damper
+// brings the sheep to a calm stop — a sheep that is neither hungry, thirsty, nor
+// scared just rests where it is instead of cruising around. (Tagged "rest" in the
+// tree so the debug overlay names the resting state.)
+export function idle(): BehaviorNode {
   return {
-    run(e, ctx, out) {
-      const s = ctx.shade;
-      if (!s) {
-        out.x = 0;
-        out.y = 0;
-        return "skipped";
-      }
-      arrive(e, s.pos, slowRadius, out);
+    run(_e, _ctx, out) {
+      out.x = 0;
+      out.y = 0;
       return "fired";
     },
   };
 }
 
-// True when thirst is the strictly dominant drive (beats hunger).
-// Sheep reads ctx.self implicitly via the `e` argument — but drives live on
-// the Sheep entity, which is a Mobile with an extra `drives` property.
-// We cast: Sheep always has drives; the tree is only used on sheep.
-export const thirstIsTop: Predicate = (e, _ctx) => {
-  const s = e as { drives?: { hunger: number; thirst: number } };
-  if (!s.drives) return false;
-  return s.drives.thirst > s.drives.hunger;
+// Drive predicates are ABSOLUTE thresholds (not "which drive is bigger"): a sheep
+// seeks water/grass only once the drive is genuinely high, otherwise it falls
+// through to idle and rests. Drives live on the Sheep entity (a Mobile with an
+// extra `drives` property); we cast since the tree is only ever run on sheep.
+export const thirsty = (threshold: number): Predicate => (e) => {
+  const s = e as { drives?: { thirst: number } };
+  return !!s.drives && s.drives.thirst >= threshold;
 };
 
-// True when hunger is at least as strong as thirst. `>=` so an exact tie (incl.
-// both 0) resolves to graze — eat rather than idle at shade — and never leaves a
-// hungry sheep stuck in `rest` when thirst happens to equal hunger.
-export const hungerIsTop: Predicate = (e, _ctx) => {
-  const s = e as { drives?: { hunger: number; thirst: number } };
-  if (!s.drives) return false;
-  return s.drives.hunger >= s.drives.thirst;
+export const hungry = (threshold: number): Predicate => (e) => {
+  const s = e as { drives?: { hunger: number } };
+  return !!s.drives && s.drives.hunger >= threshold;
 };

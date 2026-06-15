@@ -12,7 +12,7 @@ export { classifySheepMode } from "./ai/debug.js";
 export type { SheepMode, SheepModeInfo } from "./ai/debug.js";
 export type { EntityDebug } from "./types.js";
 export type { WeightedChild } from "./steering/Behavior.js";
-export { separation, cohesion, follow, graze, obstacleAvoid, fleeStress, penInterior, isPenned, drink, rest, thirstIsTop, hungerIsTop } from "./ai/behaviors.js";
+export { separation, cohesion, follow, graze, obstacleAvoid, fleeStress, penInterior, isPenned, drink, idle, thirsty, hungry } from "./ai/behaviors.js";
 export { buildSheepTree } from "./ai/trees.js";
 export type { Sheep, SheepTraits } from "./entities/Sheep.js";
 export { createSheep, defaultSheepTraits, rollSheepTraits, resetSheep } from "./entities/Sheep.js";

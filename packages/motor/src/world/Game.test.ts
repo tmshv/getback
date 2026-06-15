@@ -11,7 +11,7 @@ import { makeRng } from "@getback/math";
 import { generatePen } from "../world/penGen.js";
 import { buildPen, penContains } from "../world/Pen.js";
 import { config } from "../config.js";
-import { createAttractor, createTree } from "../entities/Attractor.js";
+import { createAttractor } from "../entities/Attractor.js";
 import { createTreat } from "../entities/Treat.js";
 import { grantBuff } from "../systems/BuffSystem.js";
 
@@ -122,6 +122,7 @@ describe("obstacle collision integration", () => {
 
     let minClearance = Infinity;
     for (let i = 0; i < 1800; i++) {
+      sheep[0]!.drives.hunger = 1; // keep it hungry so it stays driven east (grazing would otherwise sate it)
       game.update(1 / 60);
       const d = Math.hypot(sheep[0]!.pos.x - rock.pos.x, sheep[0]!.pos.y - rock.pos.y);
       minClearance = Math.min(minClearance, d);
@@ -390,8 +391,9 @@ describe("drive goal cascade integration", () => {
     const world = createWorld([s], undefined, [], null, null, undefined, [water]);
     const game = new Game(world);
 
-    // Run ~7.5 seconds. The sheep should travel toward x=300 and reach the water.
-    for (let i = 0; i < 450; i++) game.update(1 / 60);
+    // A calm (un-alarmed) sheep ambles at config.flock.calmSpeedMult of top speed,
+    // so reaching the water takes longer than at full tilt — give it ~17s.
+    for (let i = 0; i < 1000; i++) game.update(1 / 60);
 
     expect(s.pos.x).toBeGreaterThan(150); // moved toward water
     // Once inside the water radius thirst should have fallen from the max
@@ -418,23 +420,23 @@ describe("drive goal cascade integration", () => {
     expect(s.pos.x).toBeLessThan(240);
   });
 
-  it("a sheep at a tree rests in shade (createTree integration)", () => {
-    // createTree gives us both a trunk obstacle and a shade attractor.
-    const { obstacle, shade } = createTree({ x: 240, y: 135 });
+  it("a content sheep stands still — the calm/idle state, not perpetual motion", () => {
+    // No hunger/thirst/danger => content. The sheep should brake any residual drift
+    // and stay put rather than cruise around (the old behaviour always grazed).
     const s = createSheep({ x: 100, y: 135 }, defaultSheepTraits());
     s.drives.hunger = 0.0;
     s.drives.thirst = 0.0;
-    const world = createWorld([s], undefined, [obstacle], null, null, undefined, [shade]);
-    const game = new Game(world);
+    s.drives.fear = 0.0;
+    s.vel = { x: 8, y: 0 }; // small residual drift to be damped out
+    const game = new Game(createWorld([s]));
 
-    for (let i = 0; i < 300; i++) game.update(1 / 60);
+    const startX = s.pos.x, startY = s.pos.y;
+    // ~3s: short enough that hunger/thirst stay below their seek thresholds, so the
+    // sheep remains content the whole time.
+    for (let i = 0; i < 180; i++) game.update(1 / 60);
 
-    // Sheep should have moved toward the shade (x=240, within shadeRadius=28)
-    expect(s.pos.x).toBeGreaterThan(150);
-    // Must NOT have entered the solid trunk (obstacle.radius=7, centred at x=240)
-    const dx = s.pos.x - obstacle.pos.x;
-    const dy = s.pos.y - obstacle.pos.y;
-    expect(Math.hypot(dx, dy)).toBeGreaterThan(obstacle.radius + s.radius - 1);
+    expect(Math.hypot(s.vel.x, s.vel.y)).toBeLessThan(1); // came to rest
+    expect(Math.hypot(s.pos.x - startX, s.pos.y - startY)).toBeLessThan(10); // stayed put
   });
 });
 

@@ -17,6 +17,21 @@ export const config = {
     // speed ramps from 0 to maxSpeed over `cohesionRamp` px so the pull eases in.
     cohesionComfort: 36, // ~3×personalSpace
     cohesionRamp: 40,
+    // Cruise speed by what the sheep is DOING (× its trait top speed), applied to
+    // maxSpeed each frame so the desired steering speed AND the velocity clamp move
+    // together. A content sheep stands still (no goal force → the settle damper
+    // stops it), so idleSpeedMult is only a cap on any residual nudge. A hungry or
+    // thirsty sheep ambles to food/water at goalSpeedMult. Fear ramps the cap up
+    // toward alarmSpeedMult (flee fast) as it approaches warnFear.
+    idleSpeedMult: 0.2,
+    goalSpeedMult: 0.3,
+    alarmSpeedMult: 1.0,
+    warnFear: 0.4, // fear at/above which the sheep is at full alarm speed
+    // A sheep actively seeks food/water only once the drive crosses its threshold;
+    // below both it is "content" and rests (stands). Kept above the settle drive
+    // limits (0.4) so a sated sheep settles to a stop instead of re-triggering.
+    hungerThreshold: 0.5,
+    thirstThreshold: 0.5,
     moveThreshold: 2, // px/s: a neighbour faster than this counts as "moving" for follow
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
     // "Settle when content": a contented sheep (low hunger/thirst/fear) whose net
@@ -44,6 +59,14 @@ export const config = {
     trunkRadius: 7,      // solid tree trunk
     shadeRadius: 28,     // restful shade canopy, larger than trunk
     waterRadius: 22,     // default water hole radius
+    // The seek force drops to zero once a sheep reaches the inner "satisfied" core
+    // (radius × satisfiedFraction) — it parks comfortably INSIDE the attractor
+    // (where DriveSystem quenches thirst / it rests in shade) rather than fighting
+    // a crowd over the exact centre. The core is kept well inside the full radius
+    // so the sheep settles within the quench zone, not on its rim. Outside the
+    // core, desired speed ramps from 0 up over `approachRamp` px.
+    approachRamp: 40,
+    satisfiedFraction: 0.5,
   },
   traits: {
     maxSpeedJitter: 0.2,   // ±20% of flock.maxSpeed

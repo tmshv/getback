@@ -18,7 +18,19 @@ export interface SteerEnv {
 }
 
 export function steeringSystem(sheep: Sheep[], env: SteerEnv, dt: number): void {
+  const sp = config.flock;
   for (const s of sheep) {
+    // Cruise speed by mode: a content sheep stands (idle cap), a hungry/thirsty one
+    // ambles to its goal (goal cap), and fear ramps the cap up to the alarm speed so
+    // it flees fast. Scaling maxSpeed (from the immutable trait base) feeds BOTH the
+    // desired steering speed the behaviors read and MovementSystem's velocity clamp,
+    // so the whole sheep slows/speeds coherently.
+    const dr = s.drives;
+    const seeking = dr.hunger >= sp.hungerThreshold || dr.thirst >= sp.thirstThreshold;
+    const base = seeking ? sp.goalSpeedMult : sp.idleSpeedMult;
+    const mult = base + (sp.alarmSpeedMult - base) * Math.min(1, dr.fear / sp.warnFear);
+    s.maxSpeed = s.traits.maxSpeed * mult;
+
     const ctx: SteerContext = {
       neighbors: s.neighbors,
       grass: env.grass,

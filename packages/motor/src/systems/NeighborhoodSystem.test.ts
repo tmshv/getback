@@ -41,10 +41,13 @@ describe("neighborhoodSystem", () => {
 describe("steeringSystem", () => {
   it("pulls a sheep toward a neighbor beyond the cohesion comfort band", () => {
     // perception widened so the neighbor (70px away, past cohesionComfort=36) is
-    // still seen; cohesion fires and drives a toward b.
+    // still seen; cohesion fires and drives a toward b. The sheep are hungry (active,
+    // not content) so the settle damper doesn't brake the cohesion pull to zero.
     const t = { ...defaultSheepTraits(), perception: 80 };
     const a = createSheep({ x: 0, y: 0 }, t);
     const b = createSheep({ x: 70, y: 0 }, t);
+    a.drives.hunger = 1;
+    b.drives.hunger = 1;
     const sheep = [a, b];
     const grid = new UniformGrid<Sheep>(80);
     neighborhoodSystem(sheep, grid);

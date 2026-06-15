@@ -13,11 +13,19 @@ function baseEnv(over: Partial<SteerEnv> = {}): SteerEnv {
 }
 
 describe("steeringSystem debug side-channel", () => {
-  it("tags the goal mode that fired (graze) for a free, calm sheep", () => {
+  it("tags the goal mode that fired (graze) for a free, hungry sheep", () => {
     const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
+    s.drives.hunger = 1; // above hungerThreshold => grazes (a content sheep would idle)
     steeringSystem([s], baseEnv(), 1 / 60);
     expect(s.debug!.fired).toContain("graze");
     expect(s.debug!.fired).not.toContain("penned");
+  });
+
+  it("tags 'rest' for a free, content sheep (idle: stands still)", () => {
+    const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits()); // drives all 0 => content
+    steeringSystem([s], baseEnv(), 1 / 60);
+    expect(s.debug!.fired).toContain("rest");
+    expect(s.debug!.fired).not.toContain("graze");
   });
 
   it("tags 'penned' when the sheep is inside the pen", () => {
@@ -31,6 +39,7 @@ describe("steeringSystem debug side-channel", () => {
 
   it("clears the fired list each frame (no accumulation)", () => {
     const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
+    s.drives.hunger = 1; // grazes each frame
     steeringSystem([s], baseEnv(), 1 / 60);
     steeringSystem([s], baseEnv(), 1 / 60);
     expect(s.debug!.fired.filter((l) => l === "graze")).toHaveLength(1);
@@ -40,6 +49,40 @@ describe("steeringSystem debug side-channel", () => {
     const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
     steeringSystem([s], baseEnv(), 1 / 60);
     expect(s.debug!.force).toEqual({ x: s.force.x, y: s.force.y });
+  });
+});
+
+describe("steeringSystem mode-scaled cruise speed", () => {
+  it("a content sheep is capped at idle speed (it stands still)", () => {
+    const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits()); // drives all 0
+    const base = s.traits.maxSpeed;
+    steeringSystem([s], baseEnv(), 1 / 60);
+    expect(s.maxSpeed).toBeCloseTo(base * config.flock.idleSpeedMult);
+  });
+
+  it("a hungry sheep ambles at goal speed", () => {
+    const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
+    s.drives.hunger = config.flock.hungerThreshold; // seeking
+    const base = s.traits.maxSpeed;
+    steeringSystem([s], baseEnv(), 1 / 60);
+    expect(s.maxSpeed).toBeCloseTo(base * config.flock.goalSpeedMult);
+  });
+
+  it("an alarmed sheep (fear >= warnFear) is at full alarm speed", () => {
+    const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
+    s.drives.fear = config.flock.warnFear; // fully alarmed
+    const base = s.traits.maxSpeed;
+    steeringSystem([s], baseEnv(), 1 / 60);
+    expect(s.maxSpeed).toBeCloseTo(base * config.flock.alarmSpeedMult);
+  });
+
+  it("fear ramps speed up between the resting cap and the alarm cap", () => {
+    const calm = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
+    calm.drives.fear = 0;
+    const mid = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
+    mid.drives.fear = config.flock.warnFear / 2;
+    steeringSystem([calm, mid], baseEnv(), 1 / 60);
+    expect(mid.maxSpeed).toBeGreaterThan(calm.maxSpeed);
   });
 });
 

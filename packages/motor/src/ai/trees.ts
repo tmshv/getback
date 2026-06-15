@@ -4,7 +4,7 @@ import { blend } from "../steering/Behavior.js";
 import { selector, conditional, tag, tagIfForce } from "../steering/combinators.js";
 import {
   separation, cohesion, follow, graze, obstacleAvoid, fleeStress,
-  penInterior, isPenned, drink, rest, thirstIsTop, hungerIsTop,
+  penInterior, isPenned, drink, idle, thirsty, hungry,
 } from "./behaviors.js";
 import { config } from "../config.js";
 
@@ -25,14 +25,15 @@ import { config } from "../config.js";
 // Built per-sheep so traits bake in. Trees are stateless and shareable.
 export function buildSheepTree(traits: SheepTraits): BehaviorNode {
   const w = config.flock.weights;
-  const slowR = config.attractor.shadeRadius;
+  const ramp = config.attractor.approachRamp;
+  const satFrac = config.attractor.satisfiedFraction;
 
   // Goal cascade: pick the dominant drive or default to rest at shade.
   // Each goal leaf is tagged so the debug overlay can name the active mode.
   const goalNode = selector([
-    conditional(thirstIsTop, tag("drink", drink(config.attractor.waterRadius))),
-    conditional(hungerIsTop, tag("graze", graze())),
-    tag("rest", rest(slowR)),
+    conditional(thirsty(config.flock.thirstThreshold), tag("drink", drink(ramp, satFrac))),
+    conditional(hungry(config.flock.hungerThreshold), tag("graze", graze())),
+    tag("rest", idle()),
   ]);
 
   const flocking = blend([
