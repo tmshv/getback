@@ -39,15 +39,31 @@ describe("neighborhoodSystem", () => {
 });
 
 describe("steeringSystem", () => {
-  it("writes a non-zero force into a sheep being pulled toward a neighbor", () => {
-    const t = defaultSheepTraits();
+  it("pulls a sheep toward a neighbor beyond the cohesion comfort band", () => {
+    // perception widened so the neighbor (70px away, past cohesionComfort=36) is
+    // still seen; cohesion fires and drives a toward b.
+    const t = { ...defaultSheepTraits(), perception: 80 };
+    const a = createSheep({ x: 0, y: 0 }, t);
+    const b = createSheep({ x: 70, y: 0 }, t);
+    const sheep = [a, b];
+    const grid = new UniformGrid<Sheep>(80);
+    neighborhoodSystem(sheep, grid);
+    steeringSystem(sheep, { grass: noGrass, obstacles: [], stress: [] }, 1 / 60);
+    expect(Math.hypot(a.force.x, a.force.y)).toBeGreaterThan(0);
+    expect(a.force.x).toBeGreaterThan(0);
+  });
+
+  it("writes NO force toward a neighbor already inside the comfort band (the anti-jitter dead zone)", () => {
+    // b sits 30px away, inside cohesionComfort (36): a is already huddled, so
+    // cohesion stays silent, separation is out of range, and the settle damper
+    // leaves a at rest — no twitch toward an already-close flockmate.
+    const t = defaultSheepTraits(); // perception 40
     const a = createSheep({ x: 0, y: 0 }, t);
     const b = createSheep({ x: 30, y: 0 }, t);
     const sheep = [a, b];
     const grid = new UniformGrid<Sheep>(40);
     neighborhoodSystem(sheep, grid);
     steeringSystem(sheep, { grass: noGrass, obstacles: [], stress: [] }, 1 / 60);
-    expect(Math.hypot(a.force.x, a.force.y)).toBeGreaterThan(0);
-    expect(a.force.x).toBeGreaterThan(0);
+    expect(Math.hypot(a.force.x, a.force.y)).toBe(0);
   });
 });

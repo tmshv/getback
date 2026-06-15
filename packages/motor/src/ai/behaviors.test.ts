@@ -36,13 +36,31 @@ describe("separation", () => {
 });
 
 describe("cohesion", () => {
-  it("steers toward the centroid of the k nearest neighbors", () => {
+  // comfort = 30, ramp = 40 for these tests (independent of config tuning).
+  it("steers toward the centroid when the flock is farther than the comfort radius", () => {
+    const self = agent({ pos: { x: 0, y: 0 } });
+    const a = agent({ pos: { x: 40, y: 0 } });
+    const b = agent({ pos: { x: 60, y: 0 } }); // centroid (50,0), dist 50 > comfort
+    const out = { x: 0, y: 0 };
+    cohesion(6, 30, 40).run(self, { neighbors: [a, b], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
+    expect(out.x).toBeGreaterThan(0);
+  });
+  it("produces NO pull when already within the comfort radius of the centroid (kills the huddle jitter)", () => {
     const self = agent({ pos: { x: 0, y: 0 } });
     const a = agent({ pos: { x: 10, y: 0 } });
-    const b = agent({ pos: { x: 20, y: 0 } });
-    const out = { x: 0, y: 0 };
-    cohesion(6).run(self, { neighbors: [a, b], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
-    expect(out.x).toBeGreaterThan(0);
+    const b = agent({ pos: { x: 20, y: 0 } }); // centroid (15,0), dist 15 < comfort 30
+    const out = { x: 9, y: 9 };
+    cohesion(6, 30, 40).run(self, { neighbors: [a, b], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, out);
+    expect(out).toEqual({ x: 0, y: 0 });
+  });
+  it("ramps the desired pull from ~0 at the comfort boundary so it does not overshoot back in", () => {
+    const self = agent({ pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, maxSpeed: 10 });
+    const a = agent({ pos: { x: 34, y: 0 } }); // dist 34, only 4px past comfort 30, ramp 40
+    const near = { x: 0, y: 0 };
+    cohesion(6, 30, 40).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, near);
+    // desiredSpeed = maxSpeed * (4/40) = 1.0 (gentle), not the full 10.
+    expect(near.x).toBeGreaterThan(0);
+    expect(near.x).toBeLessThan(2);
   });
 });
 
@@ -118,11 +136,11 @@ describe("fleeStress", () => {
 describe("cohesion fear boost", () => {
   it("produces a stronger pull toward the flock when afraid", () => {
     const self = { pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
-    const a = { pos: { x: 30, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
+    const a = { pos: { x: 60, y: 0 }, vel: { x: 0, y: 0 }, force: { x: 0, y: 0 }, radius: 5, maxSpeed: 10, maxForce: 100, facing: "down" as const };
     const calm = { x: 0, y: 0 };
     const scared = { x: 0, y: 0 };
-    cohesion(6).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, calm);
-    cohesion(6).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 1, dt: 0 }, scared);
+    cohesion(6, 30, 40).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 }, calm);
+    cohesion(6, 30, 40).run(self, { neighbors: [a], grass: noGrass, obstacles: [], stress: [], fear: 1, dt: 0 }, scared);
     expect(Math.hypot(scared.x, scared.y)).toBeGreaterThan(Math.hypot(calm.x, calm.y));
   });
 });

@@ -10,6 +10,13 @@ export const config = {
     personalSpace: 12,
     perception: 40,
     cohesionK: 6,
+    // Cohesion comfort band: a sheep within `cohesionComfort` of the flock centroid
+    // feels no pull (it's already huddled). Must be WIDER than personalSpace (12) so
+    // there is a neutral gap between separation's push-out zone and cohesion's pull-in
+    // zone — that gap is what kills the in-place huddle jitter. Beyond it, desired
+    // speed ramps from 0 to maxSpeed over `cohesionRamp` px so the pull eases in.
+    cohesionComfort: 36, // ~3×personalSpace
+    cohesionRamp: 40,
     moveThreshold: 2, // px/s: a neighbour faster than this counts as "moving" for follow
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
     // "Settle when content": a contented sheep (low hunger/thirst/fear) whose net

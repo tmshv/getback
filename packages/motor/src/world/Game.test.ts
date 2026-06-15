@@ -59,7 +59,12 @@ describe("flocking integration", () => {
 
     const spread1 = spread(sheep);
 
-    expect(spread1).toBeLessThan(spread0 * 0.7);
+    // Cohesion's comfort band (config.flock.cohesionComfort) stops the pull once a
+    // sheep is within ~36px of the flock centroid, so the herd settles into a
+    // LOOSER huddle than a naive seek-the-centroid rule (which packs tight but
+    // jitters). We still require a clear contraction — the flock visibly gathers —
+    // just not a collapse into a point.
+    expect(spread1).toBeLessThan(spread0 * 0.8);
     expect(minPairwise(sheep)).toBeGreaterThan(4);
     for (const s of sheep) {
       expect(Number.isFinite(s.pos.x)).toBe(true);

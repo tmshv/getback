@@ -1,6 +1,6 @@
 import type { Mobile } from "../types.js";
 import type { BehaviorNode, Predicate } from "../steering/types.js";
-import { seek, arrive } from "../steering/primitives.js";
+import { arrive } from "../steering/primitives.js";
 import { gradientAt } from "../grass/GrassField.js";
 
 // All three return a Reynolds steering force (desiredVelocity - velocity) so
@@ -36,8 +36,15 @@ export function separation(personalSpace: number): BehaviorNode {
   };
 }
 
-// Steer toward the centroid of the `k` nearest neighbours (Strömbom rule).
-export function cohesion(k: number): BehaviorNode {
+// Steer toward the centroid of the `k` nearest neighbours (Strömbom rule), but
+// only once the flock is farther than `comfort` — inside that radius the sheep is
+// already huddled and feels NO pull. This dead zone is what stops the cohesion↔
+// separation tug-of-war: separation pushes apart below personalSpace, cohesion
+// pulls in only above `comfort` (which must be wider than personalSpace), leaving
+// a neutral band in between where a resting sheep sits still instead of jittering.
+// Beyond `comfort` the desired speed ramps from 0 up to maxSpeed over `ramp` px,
+// so the pull eases in at the boundary rather than yanking the sheep back through.
+export function cohesion(k: number, comfort: number, ramp: number): BehaviorNode {
   const scratch: { n: Mobile; d2: number }[] = [];
   return {
     run(e: Mobile, ctx, out) {
@@ -61,10 +68,21 @@ export function cohesion(k: number): BehaviorNode {
         cx += scratch[i]!.n.pos.x;
         cy += scratch[i]!.n.pos.y;
       }
-      seek(e, { x: cx / count, y: cy / count }, out);
+      cx /= count;
+      cy /= count;
+      const dx = cx - e.pos.x;
+      const dy = cy - e.pos.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist <= comfort) {
+        out.x = 0;
+        out.y = 0;
+        return "fired";
+      }
+      // Reynolds steer with a speed that ramps in from the comfort boundary.
+      const desiredSpeed = e.maxSpeed * Math.min(1, (dist - comfort) / ramp);
       const boost = 1 + ctx.fear; // scared sheep pull toward the flock harder (bunch)
-      out.x *= boost;
-      out.y *= boost;
+      out.x = ((dx / dist) * desiredSpeed - e.vel.x) * boost;
+      out.y = ((dy / dist) * desiredSpeed - e.vel.y) * boost;
       return "fired";
     },
   };

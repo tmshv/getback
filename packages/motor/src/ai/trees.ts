@@ -40,7 +40,7 @@ export function buildSheepTree(traits: SheepTraits): BehaviorNode {
     { node: obstacleAvoid(config.obstacleAvoid.avoidRadius),        weight: config.obstacleAvoid.weight },
     { node: goalNode,                                                weight: config.graze.weight },
     { node: separation(traits.personalSpace),                        weight: w.separation },
-    { node: cohesion(config.flock.cohesionK),                       weight: w.cohesion * traits.sociability },
+    { node: cohesion(config.flock.cohesionK, config.flock.cohesionComfort, config.flock.cohesionRamp), weight: w.cohesion * traits.sociability },
     { node: follow(config.flock.moveThreshold),                     weight: w.follow * traits.sociability },
   ]);
 
