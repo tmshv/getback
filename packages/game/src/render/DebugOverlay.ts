@@ -10,7 +10,7 @@ import { Container, Graphics, Text } from "pixi.js";
 import type { Vec2 } from "@getback/math";
 import type { World, Sheep, Dog, Mobile, Direction } from "@getback/motor";
 import { DEBUG } from "../config.js";
-import { sheepLabel, dogLabel, vectorEnd } from "./debugModel.js";
+import { sheepLabel, dogLabel, vectorEnd, grassAmountLabel } from "./debugModel.js";
 
 const C  = DEBUG.COLORS;
 const LW = DEBUG.LINE_WIDTH;
@@ -27,15 +27,24 @@ export class DebugOverlay {
   private readonly g = new Graphics();
   private readonly labels: Text[] = [];
   private used = 0;
+  // Per-cell grass-resource numbers: one persistent Text per grid cell, parked at
+  // its cell centre. Cached text strings skip the (re-layout) cost when a cell's
+  // rounded amount is unchanged frame to frame.
+  private readonly cells = new Container();
+  private readonly cellLabels: Text[] = [];
+  private readonly cellText: string[] = [];
 
   constructor() {
-    this.view.addChild(this.g);
+    // Grass numbers behind the gizmo graphics so vectors/rings stay readable.
+    this.view.addChild(this.cells, this.g);
   }
 
   draw(world: World): void {
     const g = this.g;
     g.clear();
     this.used = 0;
+
+    this.drawGrass(world.grass);
 
     // ── Static world gizmos ──────────────────────────────────────────────────
     for (const o of world.obstacles) {
@@ -59,6 +68,36 @@ export class DebugOverlay {
 
     // Hide any labels left over from a frame with more agents.
     for (let i = this.used; i < this.labels.length; i++) this.labels[i]!.visible = false;
+  }
+
+  // One number per grass cell (0–100 resource amount), centred in the cell.
+  private drawGrass(grass: World["grass"]): void {
+    const { cols, rows, cellSize, density } = grass;
+    for (let cy = 0; cy < rows; cy++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const i = cy * cols + cx;
+        let t = this.cellLabels[i];
+        if (!t) {
+          t = new Text({
+            text: "",
+            style: { fontFamily: "monospace", fontSize: DEBUG.FONT_SIZE, fill: C.grass, align: "center" },
+          });
+          t.resolution = 4;
+          t.alpha = 0.6;
+          t.anchor.set(0.5);
+          t.x = cx * cellSize + cellSize / 2;
+          t.y = cy * cellSize + cellSize / 2;
+          this.cellLabels[i] = t;
+          this.cellText[i] = "";
+          this.cells.addChild(t);
+        }
+        const str = grassAmountLabel(density[i]!);
+        if (this.cellText[i] !== str) {
+          t.text = str;
+          this.cellText[i] = str;
+        }
+      }
+    }
   }
 
   private drawSheep(g: Graphics, s: Sheep): void {

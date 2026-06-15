@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
+import { makeRng } from "@getback/math";
 import {
   createGrassField,
   densityAt,
   setDensityAt,
   depleteAt,
+  depleteRateAt,
   regrow,
   gradientAt,
 } from "./GrassField.js";
@@ -33,6 +35,30 @@ describe("GrassField", () => {
     expect(densityAt(g, 5, 5)).toBeCloseTo(0.3);
     regrow(g, 100);
     expect(densityAt(g, 5, 5)).toBe(1);
+  });
+
+  it("uniform deplete rate: depleteRateAt returns the scalar rate when no range is given", () => {
+    const g = createGrassField({ cols: 3, rows: 3, cellSize: 10, regrowRate: 0, depleteRate: 0.07 });
+    expect(depleteRateAt(g, 5, 5)).toBeCloseTo(0.07);
+    expect(depleteRateAt(g, 25, 25)).toBeCloseTo(0.07);
+  });
+
+  it("randomized deplete rate: each cell gets its own rate within [depleteRate, depleteRateMax]", () => {
+    const g = createGrassField({
+      cols: 8, rows: 8, cellSize: 10, regrowRate: 0,
+      depleteRate: 0.05, depleteRateMax: 0.1, rng: makeRng(7),
+    });
+    const rates: number[] = [];
+    for (let cx = 0; cx < 8; cx++) {
+      for (let cy = 0; cy < 8; cy++) {
+        const r = depleteRateAt(g, cx * 10 + 5, cy * 10 + 5);
+        expect(r).toBeGreaterThanOrEqual(0.05);
+        expect(r).toBeLessThanOrEqual(0.1);
+        rates.push(r);
+      }
+    }
+    // Genuinely per-cell varied, not one shared value.
+    expect(new Set(rates.map((r) => r.toFixed(4))).size).toBeGreaterThan(1);
   });
 
   it("gradient points toward higher density", () => {

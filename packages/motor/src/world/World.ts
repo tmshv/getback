@@ -55,6 +55,10 @@ function defaultGrass(): GrassField {
     cellSize: cs,
     regrowRate: config.grass.regrowRate,
     depleteRate: config.grass.depleteRate,
+    depleteRateMax: config.grass.depleteRateMax,
+    // Dedicated seeded rng so the per-cell deplete-rate pattern is reproducible
+    // and independent of the gameplay rng's draw order.
+    rng: makeRng(0x5eed),
     initial: config.grass.initial,
   });
 }

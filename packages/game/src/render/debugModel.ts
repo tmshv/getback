@@ -20,6 +20,11 @@ export function sheepLabel(sheep: Sheep): string[] {
   ];
 }
 
+/** Per-cell grass resource as a compact 0–100 "amount" for the debug grid. */
+export function grassAmountLabel(density: number): string {
+  return String(Math.round(density * 100));
+}
+
 /** Text tag for the dog: stamina, active buff, bark cooldown. */
 export function dogLabel(dog: Dog): string[] {
   const lines = [`stamina ${Math.round(dog.stamina)}`];

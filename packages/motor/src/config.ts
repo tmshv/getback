@@ -41,7 +41,10 @@ export const config = {
     // mid-flee) keeps its motion and coasts via damping instead of stutter-stopping.
     settle: { hungerMax: 0.4, thirstMax: 0.4, fearMax: 0.15, speedMax: 14, forceThreshold: 14, brakeGain: 14 },
   },
-  grass: { cellSize: 16, regrowRate: 0.0006, depleteRate: 0.6, initial: 1 },
+  // depleteRate..depleteRateMax is the per-cell graze-down rate (per second), drawn
+  // randomly per cell at world build. 0.05→0.1 means one sheep grazing a full cell
+  // empties it in a random ~20s (slow) to ~10s (fast); patches differ.
+  grass: { cellSize: 16, regrowRate: 0.0006, depleteRate: 0.05, depleteRateMax: 0.1, initial: 1 },
   drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.03, drinkRate: 0.6 },
   graze: { weight: 1.0 }, // the goal sub-selector occupies this one blend slot (drink/graze/rest are mutually exclusive)
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },

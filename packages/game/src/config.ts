@@ -62,5 +62,6 @@ export const DEBUG = {
     neighbor:   0x55ff55, // flock neighbor links
     world:      0xffaa22, // obstacles / attractors / pen
     text:       0xffffff, // labels
+    grass:      0xaaff88, // per-cell grass resource numbers
   },
 } as const;

@@ -52,10 +52,19 @@ describe("flocking integration", () => {
       createSheep({ x: 130, y: 170 }, t()),
       createSheep({ x: 130, y: 90 }, t()),
     ];
-    const game = new Game(createWorld(sheep));
+    // Uniform, non-depleting grass so the graze gradient stays zero — this isolates
+    // cohesion (a hungry flock would otherwise scatter chasing greener patches as it
+    // grazes down its own ground).
+    const flat = createGrassField({ cols: 30, rows: 18, cellSize: 16, regrowRate: 0, depleteRate: 0, initial: 1 });
+    const game = new Game(createWorld(sheep, flat));
 
     const spread0 = spread(sheep);
-    for (let i = 0; i < 1200; i++) game.update(1 / 60);
+    for (let i = 0; i < 1200; i++) {
+      // Keep them hungry (active) — a content sheep stands still and does not
+      // regroup; cohesion only pulls a flock that is on the move.
+      for (const s of sheep) s.drives.hunger = 1;
+      game.update(1 / 60);
+    }
 
     const spread1 = spread(sheep);
 

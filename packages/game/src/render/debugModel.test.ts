@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sheepLabel, dogLabel, vectorEnd } from "./debugModel.js";
+import { sheepLabel, dogLabel, vectorEnd, grassAmountLabel } from "./debugModel.js";
 import { createSheep, defaultSheepTraits, createDog, grantBuff } from "@getback/motor";
 
 describe("vectorEnd", () => {
@@ -23,6 +23,15 @@ describe("sheepLabel", () => {
     const s = createSheep({ x: 0, y: 0 }, defaultSheepTraits());
     s.debug!.fired = ["graze", "flee"];
     expect(sheepLabel(s)[0]).toContain("flee");
+  });
+});
+
+describe("grassAmountLabel", () => {
+  it("renders density as a 0–100 integer amount", () => {
+    expect(grassAmountLabel(1)).toBe("100");
+    expect(grassAmountLabel(0)).toBe("0");
+    expect(grassAmountLabel(0.5)).toBe("50");
+    expect(grassAmountLabel(0.874)).toBe("87");
   });
 });
 
