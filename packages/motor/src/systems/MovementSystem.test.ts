@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { integrate, movementSystem } from "./MovementSystem.js";
 import type { Mobile } from "../types.js";
+import { config } from "../config.js";
 
 function agent(over: Partial<Mobile> = {}): Mobile {
   return {
@@ -29,7 +30,7 @@ describe("integrate (semi-implicit Euler)", () => {
   it("applies damping (coast toward stop) when there is no force", () => {
     const e = agent({ vel: { x: 10, y: 0 }, force: { x: 0, y: 0 } });
     integrate(e, 1);
-    expect(e.vel.x).toBeCloseTo(1);
+    expect(e.vel.x).toBeCloseTo(10 * config.damping); // retains `damping` fraction after 1s of coasting
   });
   it("updates facing from the new velocity", () => {
     const e = agent({ force: { x: 0, y: 50 }, facing: "up" });

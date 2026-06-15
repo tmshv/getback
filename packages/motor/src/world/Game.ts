@@ -51,7 +51,7 @@ export class Game {
     const water = attractors.find((a) => a.kind === "water") ?? null;
     const shade = attractors.find((a) => a.kind === "shade") ?? null;
     steeringSystem(sheep, { grass, obstacles, stress, pen, water, shade }, step);
-    if (dog) dogControlSystem(dog, intent);
+    if (dog) dogControlSystem(dog, intent, step);
     if (dog) staminaSystem(dog, intent, step);
     movementSystem(sheep, step);
     if (dog) integrate(dog, step);

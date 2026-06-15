@@ -1,16 +1,23 @@
 // All movement/flock tunables in one place. Grows in later plans.
 export const config = {
   dtClampMax: 1 / 30, // clamp dt to avoid integration blow-ups / tunneling on hitches
-  damping: 0.1, // velocity fraction RETAINED per second when no force (coast to stop)
+  damping: 0.02, // velocity fraction RETAINED per second when no force (snappy coast-to-stop)
   flock: {
     radius: 5,
-    maxSpeed: 38,
-    maxForce: 80,
+    maxSpeed: 50,
+    maxForce: 200,
+    accelGain: 3, // multiplies the blended steering force so sheep reach speed quickly (direction unchanged)
     personalSpace: 12,
     perception: 40,
     cohesionK: 6,
     moveThreshold: 2, // px/s: a neighbour faster than this counts as "moving" for follow
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
+    // "Settle when content": a contented sheep (low hunger/thirst/fear) whose net
+    // steering force is below `forceThreshold` brakes to a full stop instead of
+    // drifting on micro-jitter. brakeGain is a stop-gain like the dog's.
+    // speedMax: only brake slow residual drift; a sheep with real momentum (e.g.
+    // mid-flee) keeps its motion and coasts via damping instead of stutter-stopping.
+    settle: { hungerMax: 0.4, thirstMax: 0.4, fearMax: 0.15, speedMax: 14, forceThreshold: 14, brakeGain: 14 },
   },
   grass: { cellSize: 16, regrowRate: 0.0006, depleteRate: 0.6, initial: 1 },
   drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.03, drinkRate: 0.6 },
@@ -18,9 +25,11 @@ export const config = {
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
   pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24, settleRadius: 30, settleWeight: 0.6 },
   respawn: { scatterMargin: 20, scatterTries: 20 }, // fresh-flock placement when a pen fills
-  dog: { radius: 6, maxSpeed: 70, maxForce: 400, sprintMult: 1.6, stopGain: 12 },
+  // accelGain multiplies the velocity-error move force so the dog snaps to top
+  // speed (maxForce clamps the burst); stopGain does the same for braking.
+  dog: { radius: 6, maxSpeed: 95, maxForce: 1200, sprintMult: 1.6, stopGain: 40, accelGain: 8 },
   scare: { presenceRadius: 26, presenceIntensity: 0.25, barkRadius: 70, barkIntensity: 1, barkCooldown: 0.8 },
-  stamina: { max: 100, sprintDrain: 18, regen: 22, barkCost: 12 },
+  stamina: { max: 100, sprintDrain: 22, regen: 8, barkCost: 18 },
   flee: { weight: 2.5 },
   fear: { decay: 1.2 }, // fear units shed per second when no stress is near
   bounds: { x: 0, y: 0, w: 480, h: 270 },
@@ -47,13 +56,13 @@ export const config = {
     periodMin: 12,
     periodMax: 20,
     max: 3,
-    buffChance: 0.5,
+    buffChance: 1.0, // the bone always grants a buff so a pickup always has a real effect
     radius: 4,
   },
   buffs: {
-    zoomies:  { duration: 4,   mult: 1.8 },
-    megabark: { duration: 6,   radiusMult: 1.7, ttlMult: 1.5 },
-    calm:     { duration: 6,   fearMult: 0.4 },
+    zoomies:  { duration: 12,  mult: 1.8 },
+    megabark: { duration: 12,  radiusMult: 1.7, ttlMult: 1.5 },
+    calm:     { duration: 12,  fearMult: 0.4 },
   },
   ambient: {
     intervalMin: 18,
