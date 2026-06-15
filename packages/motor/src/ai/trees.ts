@@ -4,7 +4,7 @@ import { blend } from "../steering/Behavior.js";
 import { selector, conditional, tag, tagIfForce } from "../steering/combinators.js";
 import {
   separation, cohesion, follow, graze, obstacleAvoid, fleeStress,
-  penInterior, isPenned, drink, idle, thirsty, hungry,
+  penInterior, isPenned, drink, idle, goalIs,
 } from "./behaviors.js";
 import { config } from "../config.js";
 
@@ -31,8 +31,8 @@ export function buildSheepTree(traits: SheepTraits): BehaviorNode {
   // Goal cascade: pick the dominant drive or default to rest at shade.
   // Each goal leaf is tagged so the debug overlay can name the active mode.
   const goalNode = selector([
-    conditional(thirsty(config.flock.thirstThreshold), tag("drink", drink(ramp, satFrac))),
-    conditional(hungry(config.flock.hungerThreshold), tag("graze", graze())),
+    conditional(goalIs("drink"), tag("drink", drink(ramp, satFrac))),
+    conditional(goalIs("graze"), tag("graze", graze())),
     tag("rest", idle()),
   ]);
 

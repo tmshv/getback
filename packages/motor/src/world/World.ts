@@ -55,11 +55,11 @@ function defaultGrass(): GrassField {
     cellSize: cs,
     regrowRate: config.grass.regrowRate,
     depleteRate: config.grass.depleteRate,
-    depleteRateMax: config.grass.depleteRateMax,
-    // Dedicated seeded rng so the per-cell deplete-rate pattern is reproducible
-    // and independent of the gameplay rng's draw order.
+    // Random per-cell starting density, fixed for the whole game. Dedicated seeded
+    // rng so the pattern is reproducible and independent of the gameplay rng.
+    densityMin: config.grass.densityMin,
+    densityMax: config.grass.densityMax,
     rng: makeRng(0x5eed),
-    initial: config.grass.initial,
   });
 }
 

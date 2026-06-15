@@ -27,11 +27,15 @@ export const config = {
     goalSpeedMult: 0.3,
     alarmSpeedMult: 1.0,
     warnFear: 0.4, // fear at/above which the sheep is at full alarm speed
-    // A sheep actively seeks food/water only once the drive crosses its threshold;
-    // below both it is "content" and rests (stands). Kept above the settle drive
-    // limits (0.4) so a sated sheep settles to a stop instead of re-triggering.
+    // Foraging cycle (hysteresis): a content sheep starts grazing/drinking once a
+    // drive crosses its *Threshold, and keeps at it until the drive falls to *Sated,
+    // then goes back to standing idle. The gap prevents flapping at the threshold.
+    // Drives only fall while actively foraging (see DriveSystem), so an idle sheep's
+    // hunger/thirst keep rising — it periodically gets up to eat/drink, then rests.
     hungerThreshold: 0.5,
+    hungerSated: 0.15,
     thirstThreshold: 0.5,
+    thirstSated: 0.15,
     moveThreshold: 2, // px/s: a neighbour faster than this counts as "moving" for follow
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
     // "Settle when content": a contented sheep (low hunger/thirst/fear) whose net
@@ -41,10 +45,11 @@ export const config = {
     // mid-flee) keeps its motion and coasts via damping instead of stutter-stopping.
     settle: { hungerMax: 0.4, thirstMax: 0.4, fearMax: 0.15, speedMax: 14, forceThreshold: 14, brakeGain: 14 },
   },
-  // depleteRate..depleteRateMax is the per-cell graze-down rate (per second), drawn
-  // randomly per cell at world build. 0.05→0.1 means one sheep grazing a full cell
-  // empties it in a random ~20s (slow) to ~10s (fast); patches differ.
-  grass: { cellSize: 16, regrowRate: 0.0006, depleteRate: 0.05, depleteRateMax: 0.1, initial: 1 },
+  // Grass is a FROZEN random field: each cell gets a random starting density in
+  // [densityMin, densityMax] once at world build and never changes (grassSystem,
+  // the regrow+graze dynamic model, is not run — see World.defaultGrass / Game).
+  // regrowRate/depleteRate are only used if dynamic grass is re-enabled.
+  grass: { cellSize: 16, regrowRate: 0.0006, depleteRate: 0.05, densityMin: 0.2, densityMax: 1.0 },
   drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.03, drinkRate: 0.6 },
   graze: { weight: 1.0 }, // the goal sub-selector occupies this one blend slot (drink/graze/rest are mutually exclusive)
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },

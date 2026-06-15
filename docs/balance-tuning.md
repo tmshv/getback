@@ -39,37 +39,47 @@ them); the mult only caps a residual nudge.
 
 ---
 
-## Hunger & thirst (how often sheep get up to forage/drink)
+## Hunger & thirst (the forage rhythm: rest → eat/drink → rest)
 
-`config.drives`, `config.flock` thresholds, `config.grass`.
+`config.drives` (rates) + `config.flock` (thresholds). Model: hunger & thirst RISE
+while a sheep is idle and FALL only while it is actively foraging (grazing on
+grass / drinking in water). A sheep starts foraging when a drive crosses its
+`*Threshold` and keeps at it until the drive drops to `*Sated`, then rests again.
+Thirst takes priority over hunger. So sheep eat/drink from time to time and rest
+in between — they do NOT camp a resource forever.
 
-| Want                                      | Change                  | Now  | Direction          |
-| ----------------------------------------- | ----------------------- | ---- | ------------------ |
-| Sheep get hungry sooner                   | `drives.hungerRate`     | 0.05 | ↑ hungrier faster  |
-| Sheep get thirsty sooner                  | `drives.thirstRate`     | 0.03 | ↑ thirstier faster |
-| Eating refills hunger faster              | `drives.grazeRate`      | 0.5  | ↑ eats faster      |
-| Drinking refills thirst faster            | `drives.drinkRate`      | 0.6  | ↑ drinks faster    |
-| Sheep forage more eagerly (less standing) | `flock.hungerThreshold` | 0.5  | ↓ get up sooner    |
-| Sheep seek water more eagerly             | `flock.thirstThreshold` | 0.5  | ↓ get up sooner    |
+| Want                                         | Change                              | Now  | Direction          |
+| -------------------------------------------- | ----------------------------------- | ---- | ------------------ |
+| Sheep get hungry sooner (graze more often)   | `drives.hungerRate`                 | 0.05 | ↑ hungrier faster  |
+| Sheep get thirsty sooner (drink more often)  | `drives.thirstRate`                 | 0.03 | ↑ thirstier faster |
+| Eating refills hunger faster (shorter graze) | `drives.grazeRate`                  | 0.5  | ↑ eats faster      |
+| Drinking refills thirst faster               | `drives.drinkRate`                  | 0.6  | ↑ drinks faster    |
+| Sheep get up to graze at a lower hunger      | `flock.hungerThreshold`             | 0.5  | ↓ forage sooner    |
+| Sheep get up to drink at a lower thirst      | `flock.thirstThreshold`             | 0.5  | ↓ forage sooner    |
+| Graze/drink for longer once started          | `flock.hungerSated` / `thirstSated` | 0.15 | ↓ longer sessions  |
 
-`hungerRate 0.05` ≈ a sated sheep gets hungry (crosses 0.5) in ~10s. Lowering the
-thresholds makes sheep forage more often (more motion); raising them makes them
-rest longer and forage in short bursts.
+`hungerRate 0.05` ≈ a rested sheep gets hungry (crosses 0.5) in ~10s; `thirstRate
+0.03` ≈ ~17s. Lower thresholds / higher rates ⇒ sheep forage more often (more
+motion); higher thresholds / lower rates ⇒ longer calm rests between trips. The
+`*Sated` gap below the threshold is hysteresis (prevents flapping); widen the gap
+(lower `*Sated`) for longer foraging bursts.
 
-### Grass (the resource sheep graze)
+### Grass (a FROZEN random field)
 
-`config.grass`. Each cell has its own random graze-down rate.
+`config.grass`. Each cell gets a random density once at world start and **never
+changes** — no graze depletion, no regrow (the dynamic `grassSystem` is not run;
+re-enable it in `Game.update` to bring depletion back). Sheep still read this field:
+graze steers toward greener cells, and a cell's density sets how fast a grazing
+sheep there refills hunger.
 
-| Want                        | Change                                 | Now        | Direction        |
-| --------------------------- | -------------------------------------- | ---------- | ---------------- |
-| Grass lasts longer per cell | `grass.depleteRate` / `depleteRateMax` | 0.05 / 0.1 | ↓ slower drain   |
-| Less variation cell-to-cell | narrow the min↔max gap                 | 0.05–0.10  | closer = uniform |
-| Pasture recovers faster     | `grass.regrowRate`                     | 0.0006     | ↑ faster regrow  |
-| Start with sparser grass    | `grass.initial`                        | 1          | ↓ (0..1)         |
+| Want                            | Change                            | Now       | Direction         |
+| ------------------------------- | --------------------------------- | --------- | ----------------- |
+| More/less grass overall         | `grass.densityMin` / `densityMax` | 0.2 / 1.0 | ↑ greener pasture |
+| Less variation cell-to-cell     | narrow the min↔max gap            | 0.2–1.0   | closer = uniform  |
+| (dynamic only) graze-down speed | `grass.depleteRate`               | 0.05      | ↓ slower drain    |
+| (dynamic only) regrow speed     | `grass.regrowRate`                | 0.0006    | ↑ faster regrow   |
 
-`depleteRate`..`depleteRateMax` = 0.05..0.1 means one sheep grazes a full cell
-empty in a random ~20s (slow) to ~10s (fast). They're per-second rates =
-`1 / seconds-to-empty`.
+`depleteRate`/`regrowRate` only matter if you re-enable the dynamic grass system.
 
 ---
 
@@ -160,16 +170,16 @@ into the arrow flicker even at low frame rates — raise it freely.
 
 ## Quick recipes (common asks)
 
-| Ask                                  | Turn these                                                        |
-| ------------------------------------ | ----------------------------------------------------------------- |
-| "Sheep too restless / always moving" | ↑ `hungerThreshold`/`thirstThreshold`, ↓ `goalSpeedMult`          |
-| "Sheep too lazy / barely graze"      | ↓ thresholds, ↑ `hungerRate`                                      |
-| "Bark feels weak"                    | ↓ `fear.decay`, ↑ `barkIntensity` / `barkRadius`, ↑ `flee.weight` |
-| "Dog can't herd them"                | ↑ `presenceIntensity` / `presenceRadius`, ↑ `flee.weight`         |
-| "Herd too scattered"                 | ↓ `cohesionComfort`, ↑ `weights.cohesion`                         |
-| "Herd jitters when bunched"          | ↑ `cohesionComfort` (keep ≥ 2× `personalSpace`)                   |
-| "Panic ends too fast"                | ↓ `fear.decay` (toward 0.3)                                       |
-| "Grass disappears too fast"          | ↓ `grass.depleteRate` / `depleteRateMax`                          |
+| Ask                                   | Turn these                                                        |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| "Sheep too restless / always moving"  | ↑ `hungerThreshold`/`thirstThreshold`, ↓ `goalSpeedMult`          |
+| "Sheep too lazy / never eat or drink" | ↓ thresholds, ↑ `hungerRate`/`thirstRate`                         |
+| "Bark feels weak"                     | ↓ `fear.decay`, ↑ `barkIntensity` / `barkRadius`, ↑ `flee.weight` |
+| "Dog can't herd them"                 | ↑ `presenceIntensity` / `presenceRadius`, ↑ `flee.weight`         |
+| "Herd too scattered"                  | ↓ `cohesionComfort`, ↑ `weights.cohesion`                         |
+| "Herd jitters when bunched"           | ↑ `cohesionComfort` (keep ≥ 2× `personalSpace`)                   |
+| "Panic ends too fast"                 | ↓ `fear.decay` (toward 0.3)                                       |
+| "Pasture too sparse / too lush"       | `grass.densityMin` / `densityMax`                                 |
 
 ---
 

@@ -25,10 +25,9 @@ export function steeringSystem(sheep: Sheep[], env: SteerEnv, dt: number): void 
     // it flees fast. Scaling maxSpeed (from the immutable trait base) feeds BOTH the
     // desired steering speed the behaviors read and MovementSystem's velocity clamp,
     // so the whole sheep slows/speeds coherently.
-    const dr = s.drives;
-    const seeking = dr.hunger >= sp.hungerThreshold || dr.thirst >= sp.thirstThreshold;
+    const seeking = s.goal !== "idle"; // grazing or drinking (set by DriveSystem)
     const base = seeking ? sp.goalSpeedMult : sp.idleSpeedMult;
-    const mult = base + (sp.alarmSpeedMult - base) * Math.min(1, dr.fear / sp.warnFear);
+    const mult = base + (sp.alarmSpeedMult - base) * Math.min(1, s.drives.fear / sp.warnFear);
     s.maxSpeed = s.traits.maxSpeed * mult;
 
     const ctx: SteerContext = {

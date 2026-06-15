@@ -4,7 +4,7 @@ import type { Mobile } from "../types.js";
 import type { StressSource } from "../scare/StressSource.js";
 import { createGrassField, setDensityAt } from "../grass/GrassField.js";
 import { createObstacle } from "../entities/Obstacle.js";
-import { drink, idle, thirsty, hungry } from "./behaviors.js";
+import { drink, idle, goalIs } from "./behaviors.js";
 import type { Sheep } from "../entities/Sheep.js";
 import { createSheep, defaultSheepTraits } from "../entities/Sheep.js";
 import { createAttractor } from "../entities/Attractor.js";
@@ -251,28 +251,20 @@ describe("idle", () => {
   });
 });
 
-describe("thirsty (absolute threshold)", () => {
-  it("is true only once thirst reaches the threshold", () => {
-    const ctx = { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 };
-    expect(thirsty(0.5)(sheepAgent({ hunger: 0, thirst: 0.6, fear: 0 }), ctx)).toBe(true);
-    expect(thirsty(0.5)(sheepAgent({ hunger: 0, thirst: 0.4, fear: 0 }), ctx)).toBe(false);
+describe("goalIs", () => {
+  const ctx = { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 };
+  it("matches the sheep's current goal (set by DriveSystem)", () => {
+    const s = createSheep({ x: 0, y: 0 }, defaultSheepTraits());
+    s.goal = "drink";
+    expect(goalIs("drink")(s, ctx)).toBe(true);
+    expect(goalIs("graze")(s, ctx)).toBe(false);
+    s.goal = "graze";
+    expect(goalIs("graze")(s, ctx)).toBe(true);
   });
-  it("ignores hunger — a thirsty-but-less-than-hungry sheep still wants to drink", () => {
-    const ctx = { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 };
-    expect(thirsty(0.5)(sheepAgent({ hunger: 0.9, thirst: 0.6, fear: 0 }), ctx)).toBe(true);
-  });
-});
-
-describe("hungry (absolute threshold)", () => {
-  it("is true only once hunger reaches the threshold", () => {
-    const ctx = { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 };
-    expect(hungry(0.5)(sheepAgent({ hunger: 0.6, thirst: 0, fear: 0 }), ctx)).toBe(true);
-    expect(hungry(0.5)(sheepAgent({ hunger: 0.4, thirst: 0, fear: 0 }), ctx)).toBe(false);
-  });
-  it("a content sheep (both drives low) is neither thirsty nor hungry → it idles", () => {
-    const ctx = { neighbors: [], grass: noGrass, obstacles: [], stress: [], fear: 0, dt: 0 };
-    const s = sheepAgent({ hunger: 0.2, thirst: 0.2, fear: 0 });
-    expect(thirsty(0.5)(s, ctx)).toBe(false);
-    expect(hungry(0.5)(s, ctx)).toBe(false);
+  it("matches nothing for a default (idle) goal except idle", () => {
+    const s = createSheep({ x: 0, y: 0 }, defaultSheepTraits());
+    expect(goalIs("drink")(s, ctx)).toBe(false);
+    expect(goalIs("graze")(s, ctx)).toBe(false);
+    expect(goalIs("idle")(s, ctx)).toBe(true);
   });
 });

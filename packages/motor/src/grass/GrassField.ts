@@ -7,11 +7,7 @@ export interface GrassField {
   cellSize: number;
   density: Float32Array;
   regrowRate: number;
-  // Per-second graze-down rate. `depleteRate` is the uniform fallback; when the
-  // field is built with a range + rng, `cellDepleteRate` holds an independent
-  // random rate per cell (so some patches are tougher to graze than others).
   depleteRate: number;
-  cellDepleteRate?: Float32Array;
 }
 
 export interface GrassFieldOptions {
@@ -19,22 +15,22 @@ export interface GrassFieldOptions {
   rows: number;
   cellSize: number;
   regrowRate: number;
-  // Uniform deplete rate, OR the LOWER bound when `depleteRateMax` + `rng` are
-  // given (then each cell draws its own rate in [depleteRate, depleteRateMax]).
   depleteRate: number;
-  depleteRateMax?: number;
+  initial?: number; // uniform starting density (used when no random range is given)
+  // Per-cell RANDOM starting density: when `densityMin`/`densityMax` + `rng` are
+  // given, each cell draws its own value in [densityMin, densityMax] once at build.
+  densityMin?: number;
+  densityMax?: number;
   rng?: Rng;
-  initial?: number;
 }
 
 export function createGrassField(opts: GrassFieldOptions): GrassField {
   const n = opts.cols * opts.rows;
   const density = new Float32Array(n);
-  density.fill(opts.initial ?? 1);
-  let cellDepleteRate: Float32Array | undefined;
-  if (opts.depleteRateMax !== undefined && opts.rng) {
-    cellDepleteRate = new Float32Array(n);
-    for (let i = 0; i < n; i++) cellDepleteRate[i] = opts.rng.range(opts.depleteRate, opts.depleteRateMax);
+  if (opts.densityMin !== undefined && opts.densityMax !== undefined && opts.rng) {
+    for (let i = 0; i < n; i++) density[i] = opts.rng.range(opts.densityMin, opts.densityMax);
+  } else {
+    density.fill(opts.initial ?? 1);
   }
   return {
     cols: opts.cols,
@@ -43,7 +39,6 @@ export function createGrassField(opts: GrassFieldOptions): GrassField {
     density,
     regrowRate: opts.regrowRate,
     depleteRate: opts.depleteRate,
-    cellDepleteRate,
   };
 }
 
@@ -63,12 +58,6 @@ export function densityAt(field: GrassField, x: number, y: number): number {
 
 export function setDensityAt(field: GrassField, x: number, y: number, value: number): void {
   field.density[indexAt(field, x, y)] = clamp(value, 0, 1);
-}
-
-// Per-second graze-down rate for the cell at a world position: the cell's own
-// randomized rate when present, else the uniform fallback.
-export function depleteRateAt(field: GrassField, x: number, y: number): number {
-  return field.cellDepleteRate ? field.cellDepleteRate[indexAt(field, x, y)]! : field.depleteRate;
 }
 
 export function depleteAt(field: GrassField, x: number, y: number, amount: number): void {

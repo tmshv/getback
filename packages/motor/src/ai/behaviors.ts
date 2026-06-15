@@ -241,16 +241,8 @@ export function idle(): BehaviorNode {
   };
 }
 
-// Drive predicates are ABSOLUTE thresholds (not "which drive is bigger"): a sheep
-// seeks water/grass only once the drive is genuinely high, otherwise it falls
-// through to idle and rests. Drives live on the Sheep entity (a Mobile with an
-// extra `drives` property); we cast since the tree is only ever run on sheep.
-export const thirsty = (threshold: number): Predicate => (e) => {
-  const s = e as { drives?: { thirst: number } };
-  return !!s.drives && s.drives.thirst >= threshold;
-};
-
-export const hungry = (threshold: number): Predicate => (e) => {
-  const s = e as { drives?: { hunger: number } };
-  return !!s.drives && s.drives.hunger >= threshold;
-};
+// The active goal is chosen once per frame by DriveSystem (with hysteresis); the
+// tree just routes to the matching behavior. `goalIs("drink")` gates the drink
+// leaf, etc. Goal lives on the Sheep entity; we cast since the tree only runs on
+// sheep (a non-sheep Mobile has no goal and matches nothing).
+export const goalIs = (goal: string): Predicate => (e) => (e as { goal?: string }).goal === goal;

@@ -1,6 +1,6 @@
 import type { Vec2 } from "@getback/math";
 import type { Rng } from "@getback/math";
-import type { Mobile } from "../types.js";
+import type { Mobile, SheepGoal } from "../types.js";
 import type { BehaviorNode } from "../steering/types.js";
 import { config } from "../config.js";
 import { buildSheepTree } from "../ai/trees.js";
@@ -18,6 +18,7 @@ export interface Sheep extends Mobile {
   traits: SheepTraits;
   drives: { hunger: number; thirst: number; fear: number }; // each [0..1]
   penned: boolean;
+  goal: SheepGoal; // current forage intent, set by DriveSystem with hysteresis
   neighbors: Sheep[]; // refilled each frame by NeighborhoodSystem
   root: BehaviorNode;
 }
@@ -60,6 +61,7 @@ export function resetSheep(sheep: Sheep, pos: Vec2): void {
   sheep.force.x = 0;
   sheep.force.y = 0;
   sheep.penned = false;
+  sheep.goal = "idle";
   sheep.drives.fear = 0;
   sheep.drives.hunger = 0;
   sheep.drives.thirst = 0;
@@ -84,6 +86,7 @@ export function createSheep(pos: Vec2, traits: SheepTraits): Sheep {
     traits,
     drives: { hunger: 0, thirst: 0, fear: 0 },
     penned: false,
+    goal: "idle",
     neighbors: [],
     root: buildSheepTree(traits),
     debug: { fired: [], force: { x: 0, y: 0 } },

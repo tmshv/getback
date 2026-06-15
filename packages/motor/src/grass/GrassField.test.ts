@@ -5,7 +5,6 @@ import {
   densityAt,
   setDensityAt,
   depleteAt,
-  depleteRateAt,
   regrow,
   gradientAt,
 } from "./GrassField.js";
@@ -37,28 +36,28 @@ describe("GrassField", () => {
     expect(densityAt(g, 5, 5)).toBe(1);
   });
 
-  it("uniform deplete rate: depleteRateAt returns the scalar rate when no range is given", () => {
-    const g = createGrassField({ cols: 3, rows: 3, cellSize: 10, regrowRate: 0, depleteRate: 0.07 });
-    expect(depleteRateAt(g, 5, 5)).toBeCloseTo(0.07);
-    expect(depleteRateAt(g, 25, 25)).toBeCloseTo(0.07);
-  });
-
-  it("randomized deplete rate: each cell gets its own rate within [depleteRate, depleteRateMax]", () => {
+  it("randomizes each cell's starting density within [densityMin, densityMax] when given an rng", () => {
     const g = createGrassField({
-      cols: 8, rows: 8, cellSize: 10, regrowRate: 0,
-      depleteRate: 0.05, depleteRateMax: 0.1, rng: makeRng(7),
+      cols: 8, rows: 8, cellSize: 10, regrowRate: 0, depleteRate: 0,
+      densityMin: 0.2, densityMax: 1.0, rng: makeRng(7),
     });
-    const rates: number[] = [];
+    const vals: number[] = [];
     for (let cx = 0; cx < 8; cx++) {
       for (let cy = 0; cy < 8; cy++) {
-        const r = depleteRateAt(g, cx * 10 + 5, cy * 10 + 5);
-        expect(r).toBeGreaterThanOrEqual(0.05);
-        expect(r).toBeLessThanOrEqual(0.1);
-        rates.push(r);
+        const v = densityAt(g, cx * 10 + 5, cy * 10 + 5);
+        expect(v).toBeGreaterThanOrEqual(0.2);
+        expect(v).toBeLessThanOrEqual(1.0);
+        vals.push(v);
       }
     }
     // Genuinely per-cell varied, not one shared value.
-    expect(new Set(rates.map((r) => r.toFixed(4))).size).toBeGreaterThan(1);
+    expect(new Set(vals.map((v) => v.toFixed(4))).size).toBeGreaterThan(1);
+  });
+
+  it("falls back to a uniform density when no random range is given", () => {
+    const g = createGrassField({ cols: 3, rows: 3, cellSize: 10, regrowRate: 0, depleteRate: 0, initial: 0.7 });
+    expect(densityAt(g, 5, 5)).toBeCloseTo(0.7);
+    expect(densityAt(g, 25, 25)).toBeCloseTo(0.7);
   });
 
   it("gradient points toward higher density", () => {

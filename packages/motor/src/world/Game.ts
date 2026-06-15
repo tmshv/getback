@@ -1,6 +1,5 @@
 import type { World } from "./World.js";
 import { config } from "../config.js";
-import { grassSystem } from "../systems/GrassSystem.js";
 import { driveSystem } from "../systems/DriveSystem.js";
 import { neighborhoodSystem } from "../systems/NeighborhoodSystem.js";
 import { steeringSystem } from "../systems/SteeringSystem.js";
@@ -38,7 +37,9 @@ export class Game {
             treats, treatPool, treatEmitter, ambientScareState } = this.world;
 
     if (dog) buffSystem(dog, step);
-    grassSystem(grass, sheep, step);
+    // Grass is a frozen random field (set once at world build); it does not change
+    // at runtime. To re-enable grazing depletion + regrow, call
+    // `grassSystem(grass, sheep, step)` here.
     driveSystem(sheep, grass, attractors, step);
     neighborhoodSystem(sheep, grid);
     // Rebuild the per-frame stress list (presence + optional bark), then add an

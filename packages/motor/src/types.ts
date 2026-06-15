@@ -2,6 +2,11 @@ import type { Vec2 } from "@getback/math";
 
 export type Direction = "down" | "up" | "left" | "right";
 
+// What a sheep is currently trying to do about its drives. Chosen with hysteresis
+// (see classifyGoal): a sheep keeps foraging until the drive is sated, so it does
+// not flap on and off at the threshold. Idle = content, stands still.
+export type SheepGoal = "idle" | "graze" | "drink";
+
 // Optional per-frame debug side-channel, written by the steering layer and read
 // by the render-side debug overlay. Ignored by the simulation itself.
 //   fired: behavior-tree branch labels that fired this frame (see ai/debug.ts)

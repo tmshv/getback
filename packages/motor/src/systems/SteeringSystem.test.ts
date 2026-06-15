@@ -13,9 +13,9 @@ function baseEnv(over: Partial<SteerEnv> = {}): SteerEnv {
 }
 
 describe("steeringSystem debug side-channel", () => {
-  it("tags the goal mode that fired (graze) for a free, hungry sheep", () => {
+  it("tags the goal mode that fired (graze) for a grazing sheep", () => {
     const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
-    s.drives.hunger = 1; // above hungerThreshold => grazes (a content sheep would idle)
+    s.goal = "graze"; // DriveSystem normally sets this; a content sheep would idle
     steeringSystem([s], baseEnv(), 1 / 60);
     expect(s.debug!.fired).toContain("graze");
     expect(s.debug!.fired).not.toContain("penned");
@@ -39,7 +39,7 @@ describe("steeringSystem debug side-channel", () => {
 
   it("clears the fired list each frame (no accumulation)", () => {
     const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
-    s.drives.hunger = 1; // grazes each frame
+    s.goal = "graze"; // grazes each frame
     steeringSystem([s], baseEnv(), 1 / 60);
     steeringSystem([s], baseEnv(), 1 / 60);
     expect(s.debug!.fired.filter((l) => l === "graze")).toHaveLength(1);
@@ -60,9 +60,9 @@ describe("steeringSystem mode-scaled cruise speed", () => {
     expect(s.maxSpeed).toBeCloseTo(base * config.flock.idleSpeedMult);
   });
 
-  it("a hungry sheep ambles at goal speed", () => {
+  it("a foraging (grazing/drinking) sheep ambles at goal speed", () => {
     const s = createSheep({ x: 24, y: 24 }, defaultSheepTraits());
-    s.drives.hunger = config.flock.hungerThreshold; // seeking
+    s.goal = "graze"; // seeking (set by DriveSystem)
     const base = s.traits.maxSpeed;
     steeringSystem([s], baseEnv(), 1 / 60);
     expect(s.maxSpeed).toBeCloseTo(base * config.flock.goalSpeedMult);
