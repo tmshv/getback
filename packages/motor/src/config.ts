@@ -53,10 +53,14 @@ export const config = {
   // accelGain multiplies the velocity-error move force so the dog snaps to top
   // speed (maxForce clamps the burst); stopGain does the same for braking.
   dog: { radius: 6, maxSpeed: 95, maxForce: 1200, sprintMult: 1.6, stopGain: 40, accelGain: 8 },
-  scare: { presenceRadius: 26, presenceIntensity: 0.25, barkRadius: 70, barkIntensity: 1, barkCooldown: 0.8 },
+  // presenceIntensity reaches warnFear (0.4) so a sheep right next to the dog goes
+  // to full alarm speed — the dog's presence herds firmly, not just gently. The
+  // bark is a strong, wide scare: intensity >1 saturates fear (clamped to 1) across
+  // an inner core and stays high out to a larger radius.
+  scare: { presenceRadius: 30, presenceIntensity: 0.4, barkRadius: 100, barkIntensity: 1.6, barkCooldown: 0.8 },
   stamina: { max: 100, sprintDrain: 22, regen: 8, barkCost: 18 },
-  flee: { weight: 2.5 },
-  fear: { decay: 1.2 }, // fear units shed per second when no stress is near
+  flee: { weight: 3.5 }, // a scared sheep prioritises fleeing over grazing/flocking
+  fear: { decay: 0.45 }, // fear units shed per second when no stress is near (lingers ~2.5× longer than before)
   bounds: { x: 0, y: 0, w: 480, h: 270 },
   attractor: {
     trunkRadius: 7,      // solid tree trunk

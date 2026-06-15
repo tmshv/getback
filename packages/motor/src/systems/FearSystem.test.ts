@@ -24,7 +24,7 @@ describe("fearSystem", () => {
   it("decays fear toward 0 when no stress is in range", () => {
     const s = createSheep({ x: 0, y: 0 }, defaultSheepTraits());
     s.drives.fear = 1;
-    fearSystem([s], [], 1);
+    fearSystem([s], [], 5); // ample time to fully shed at the configured decay rate
     expect(s.drives.fear).toBe(0);
   });
 
