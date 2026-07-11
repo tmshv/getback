@@ -35,7 +35,7 @@ export const config = {
     hungerThreshold: 0.5,
     hungerSated: 0.15,
     thirstThreshold: 0.5,
-    thirstSated: 0.15,
+    thirstSated: 0.0, // drink to empty so a water trip lasts a long time (less camping)
     moveThreshold: 2, // px/s: a neighbour faster than this counts as "moving" for follow
     weights: { separation: 1.6, cohesion: 0.9, follow: 0.5 },
     // "Settle when content": a contented sheep (low hunger/thirst/fear) whose net
@@ -45,12 +45,16 @@ export const config = {
     // mid-flee) keeps its motion and coasts via damping instead of stutter-stopping.
     settle: { hungerMax: 0.4, thirstMax: 0.4, fearMax: 0.15, speedMax: 14, forceThreshold: 14, brakeGain: 14 },
   },
-  // Grass is a FROZEN random field: each cell gets a random starting density in
-  // [densityMin, densityMax] once at world build and never changes (grassSystem,
-  // the regrow+graze dynamic model, is not run — see World.defaultGrass / Game).
-  // regrowRate/depleteRate are only used if dynamic grass is re-enabled.
-  grass: { cellSize: 16, regrowRate: 0.0006, depleteRate: 0.05, densityMin: 0.2, densityMax: 1.0 },
-  drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.03, drinkRate: 0.6 },
+  // Grass: each cell gets a random starting density in [densityMin, densityMax] at
+  // world build. Grazing sheep then wear it DOWN at `depleteRate`/s (only while
+  // actively grazing); there is NO regrow, so the pasture is finite and thins where
+  // the herd feeds. (`regrowRate` is unused unless regrow is re-enabled in
+  // GrassSystem.) depleteRate 0.2/s ≈ 5s of grazing to strip a full cell, so a
+  // graze visibly thins the patch the sheep is feeding on.
+  grass: { cellSize: 16, regrowRate: 0.0006, depleteRate: 0.2, densityMin: 0.2, densityMax: 1.0 },
+  // thirstRate is low so sheep only trek to water occasionally (they graze out in
+  // the pasture most of the time instead of camping the water hole).
+  drives: { hungerRate: 0.05, grazeRate: 0.5, thirstRate: 0.01, drinkRate: 0.6 },
   graze: { weight: 1.0 }, // the goal sub-selector occupies this one blend slot (drink/graze/rest are mutually exclusive)
   obstacleAvoid: { weight: 1.6, avoidRadius: 18 },
   pen: { rMin: 40, rMax: 60, minVerts: 5, maxVerts: 9, minGateWidth: 24, settleRadius: 30, settleWeight: 0.6 },

@@ -1,13 +1,14 @@
 import type { GrassField } from "../grass/GrassField.js";
-import { regrow, depleteAt } from "../grass/GrassField.js";
+import { depleteAt } from "../grass/GrassField.js";
 import type { Sheep } from "../entities/Sheep.js";
 
-// Dynamic grass: regrow everywhere, each sheep nibbles the cell it stands on.
-// NOTE: currently DISABLED in Game — the world uses a frozen random grass field
-// (see World.defaultGrass), so this is not called each tick. Kept as the opt-in
-// dynamic model: call it from Game.update to bring grazing depletion + regrow back.
+// Grazing wears grass down: a sheep that is actively GRAZING eats the cell under
+// it (an idle, drinking, or fleeing sheep does not). There is NO regrow — grass is
+// a finite resource that gets used up over a session, so sheep roam toward fresher
+// patches and the pasture visibly thins where the herd feeds.
 export function grassSystem(grass: GrassField, sheep: Sheep[], dt: number): void {
-  regrow(grass, dt);
   const amount = grass.depleteRate * dt;
-  for (const s of sheep) depleteAt(grass, s.pos.x, s.pos.y, amount);
+  for (const s of sheep) {
+    if (s.goal === "graze") depleteAt(grass, s.pos.x, s.pos.y, amount);
+  }
 }

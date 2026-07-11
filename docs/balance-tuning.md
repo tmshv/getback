@@ -48,38 +48,41 @@ grass / drinking in water). A sheep starts foraging when a drive crosses its
 Thirst takes priority over hunger. So sheep eat/drink from time to time and rest
 in between — they do NOT camp a resource forever.
 
-| Want                                         | Change                              | Now  | Direction          |
-| -------------------------------------------- | ----------------------------------- | ---- | ------------------ |
-| Sheep get hungry sooner (graze more often)   | `drives.hungerRate`                 | 0.05 | ↑ hungrier faster  |
-| Sheep get thirsty sooner (drink more often)  | `drives.thirstRate`                 | 0.03 | ↑ thirstier faster |
-| Eating refills hunger faster (shorter graze) | `drives.grazeRate`                  | 0.5  | ↑ eats faster      |
-| Drinking refills thirst faster               | `drives.drinkRate`                  | 0.6  | ↑ drinks faster    |
-| Sheep get up to graze at a lower hunger      | `flock.hungerThreshold`             | 0.5  | ↓ forage sooner    |
-| Sheep get up to drink at a lower thirst      | `flock.thirstThreshold`             | 0.5  | ↓ forage sooner    |
-| Graze/drink for longer once started          | `flock.hungerSated` / `thirstSated` | 0.15 | ↓ longer sessions  |
+| Want                                         | Change                  | Now  | Direction          |
+| -------------------------------------------- | ----------------------- | ---- | ------------------ |
+| Sheep get hungry sooner (graze more often)   | `drives.hungerRate`     | 0.05 | ↑ hungrier faster  |
+| Sheep get thirsty sooner (drink more often)  | `drives.thirstRate`     | 0.01 | ↑ thirstier faster |
+| Eating refills hunger faster (shorter graze) | `drives.grazeRate`      | 0.5  | ↑ eats faster      |
+| Drinking refills thirst faster               | `drives.drinkRate`      | 0.6  | ↑ drinks faster    |
+| Sheep get up to graze at a lower hunger      | `flock.hungerThreshold` | 0.5  | ↓ forage sooner    |
+| Sheep get up to drink at a lower thirst      | `flock.thirstThreshold` | 0.5  | ↓ forage sooner    |
+| Graze for longer once started                | `flock.hungerSated`     | 0.15 | ↓ longer sessions  |
+| Drink to fuller (rarer water trips)          | `flock.thirstSated`     | 0.0  | ↓ longer between   |
 
 `hungerRate 0.05` ≈ a rested sheep gets hungry (crosses 0.5) in ~10s; `thirstRate
-0.03` ≈ ~17s. Lower thresholds / higher rates ⇒ sheep forage more often (more
+0.01` ≈ ~50s (so sheep graze often but only trek to water occasionally). Lower
+thresholds / higher rates ⇒ sheep forage more often (more
 motion); higher thresholds / lower rates ⇒ longer calm rests between trips. The
 `*Sated` gap below the threshold is hysteresis (prevents flapping); widen the gap
 (lower `*Sated`) for longer foraging bursts.
 
-### Grass (a FROZEN random field)
+### Grass (random start, eaten down, no regrow)
 
-`config.grass`. Each cell gets a random density once at world start and **never
-changes** — no graze depletion, no regrow (the dynamic `grassSystem` is not run;
-re-enable it in `Game.update` to bring depletion back). Sheep still read this field:
-graze steers toward greener cells, and a cell's density sets how fast a grazing
-sheep there refills hunger.
+`config.grass`. Each cell gets a random density once at world start; a sheep that
+is **actively grazing** then wears its cell DOWN at `depleteRate`/s. There is **no
+regrow** — grass is finite and the pasture thins where the herd feeds (idle /
+drinking / fleeing sheep don't eat). Graze steers toward greener cells, so sheep
+roam to fresher grass as they strip patches. (Wear ≈ 6%/min of total grass with
+the default flock; per grazed cell the density visibly drops in the debug overlay.)
 
-| Want                            | Change                            | Now       | Direction         |
-| ------------------------------- | --------------------------------- | --------- | ----------------- |
-| More/less grass overall         | `grass.densityMin` / `densityMax` | 0.2 / 1.0 | ↑ greener pasture |
-| Less variation cell-to-cell     | narrow the min↔max gap            | 0.2–1.0   | closer = uniform  |
-| (dynamic only) graze-down speed | `grass.depleteRate`               | 0.05      | ↓ slower drain    |
-| (dynamic only) regrow speed     | `grass.regrowRate`                | 0.0006    | ↑ faster regrow   |
+| Want                        | Change                            | Now       | Direction         |
+| --------------------------- | --------------------------------- | --------- | ----------------- |
+| More/less grass overall     | `grass.densityMin` / `densityMax` | 0.2 / 1.0 | ↑ greener pasture |
+| Less variation cell-to-cell | narrow the min↔max gap            | 0.2–1.0   | closer = uniform  |
+| Sheep waste grass faster    | `grass.depleteRate`               | 0.2       | ↑ strips quicker  |
 
-`depleteRate`/`regrowRate` only matter if you re-enable the dynamic grass system.
+To bring grass back (regrow), re-enable it in `GrassSystem` (`grass.regrowRate`,
+currently unused).
 
 ---
 
@@ -180,6 +183,7 @@ into the arrow flicker even at low frame rates — raise it freely.
 | "Herd jitters when bunched"           | ↑ `cohesionComfort` (keep ≥ 2× `personalSpace`)                   |
 | "Panic ends too fast"                 | ↓ `fear.decay` (toward 0.3)                                       |
 | "Pasture too sparse / too lush"       | `grass.densityMin` / `densityMax`                                 |
+| "Sheep spend too long at the water"   | ↓ `drives.thirstRate`, ↓ `flock.thirstSated` (drink fuller)       |
 
 ---
 

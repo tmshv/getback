@@ -62,7 +62,7 @@ describe("driveSystem — thirst", () => {
     const bare = createGrassField({ cols: 5, rows: 5, cellSize: 10, regrowRate: 0, depleteRate: 0, initial: 0 });
     const s = createSheep({ x: 25, y: 25 }, defaultSheepTraits());
     driveSystem([s], bare, [], 1);
-    expect(s.drives.thirst).toBeCloseTo(0.03);
+    expect(s.drives.thirst).toBeCloseTo(config.drives.thirstRate);
   });
 
   it("reduces thirst while sheep is inside a water attractor", () => {
@@ -75,12 +75,13 @@ describe("driveSystem — thirst", () => {
     expect(s.drives.thirst).toBe(0);
   });
 
-  it("does not reduce thirst when outside the water radius", () => {
+  it("does not reduce thirst when outside the water radius (even when wanting to drink)", () => {
     const bare = createGrassField({ cols: 5, rows: 5, cellSize: 10, regrowRate: 0, depleteRate: 0, initial: 0 });
     const water: Attractor = createAttractor("water", { x: 200, y: 200 }, 20);
     const s = createSheep({ x: 25, y: 25 }, defaultSheepTraits());
+    s.drives.thirst = 0.6; // above threshold => goal "drink", but the water is far away
     driveSystem([s], bare, [water], 1);
-    expect(s.drives.thirst).toBeCloseTo(0.03);
+    expect(s.drives.thirst).toBeCloseTo(0.6 + config.drives.thirstRate); // rose, not quenched
   });
 
   it("clamps thirst to [0,1]", () => {
